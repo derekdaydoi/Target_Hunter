@@ -8,12 +8,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/derekdaydoi/target-hunter/releases/latest/download/TargetHunter-Setup.exe">
+  <a href="https://github.com/derekdaydoi/Target_Hunter/releases/latest/download/TargetHunter-Setup.exe">
     <img src="https://img.shields.io/badge/Download-Windows%2010%20%2F%2011-386ff1?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="48">
   </a>
 </p>
 
-<p align="center"><sub>TargetHunter-Setup.exe · 64-bit · khoảng 113 MB · <a href="https://github.com/derekdaydoi/target-hunter/releases/latest">Các phiên bản</a></sub></p>
+<p align="center"><sub>TargetHunter-Setup.exe · 64-bit · khoảng 113 MB · <a href="https://github.com/derekdaydoi/Target_Hunter/releases/latest">Các phiên bản</a></sub></p>
 
 ---
 

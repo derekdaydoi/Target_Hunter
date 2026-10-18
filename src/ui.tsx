@@ -141,7 +141,11 @@ export function useTaskActions() {
   return {
     priorityFull,
     color: (t: Task) => s.tracks.find((k) => k.id === t.track_id)?.color ?? CATS[t.category] ?? '#98a2b3',
-    toggle: (t: Task) => s.exec('UPDATE tasks SET done = ?, done_at = ? WHERE id = ?', [t.done ? 0 : 1, t.done ? null : today(), t.id]),
+    // Ticking marks the task done right away, whatever its date: it leaves the to-do lists and stays crossed out on its calendar day.
+    toggle: async (t: Task) => {
+      await s.exec('UPDATE tasks SET done = ?, done_at = ? WHERE id = ?', [t.done ? 0 : 1, t.done ? null : today(), t.id]);
+      if (!t.done) s.toast(`Đã xong: ${t.title}`, () => s.exec('UPDATE tasks SET done = 0, done_at = NULL WHERE id = ?', [t.id]));
+    },
     star: (t: Task) => {
       if (!t.priority && priorityFull(t.due, t.id)) return s.toast(`Focus Filter: mỗi ngày tối đa ${MAX_PRIORITY} việc ưu tiên.`);
       return s.exec('UPDATE tasks SET priority = ? WHERE id = ?', [t.priority ? 0 : 1, t.id]);

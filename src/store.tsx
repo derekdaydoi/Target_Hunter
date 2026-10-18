@@ -8,7 +8,7 @@ type Ctx = Data & {
   exec(sql: string, params?: unknown[]): Promise<number>;
   setSetting(key: string, value: string): Promise<void>;
   reload(): Promise<void>;
-  toast(msg: string): void;
+  toast(msg: string, undo?: () => void): void;
 };
 
 const C = createContext<Ctx>(null!);
@@ -21,6 +21,7 @@ export function Store({ children }: { children: ReactNode }) {
   const [page, go] = useState<Page>(initialPage);
   const [anchor, setAnchor] = useState(today());
   const [msg, setMsg] = useState('');
+  const [undo, setUndo] = useState<(() => void) | null>(null);
   const timer = useRef(0);
 
   const reload = useCallback(async () => {
@@ -37,10 +38,11 @@ export function Store({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
-  const toast = useCallback((m: string) => {
+  const toast = useCallback((m: string, onUndo?: () => void) => {
     setMsg(m);
+    setUndo(() => onUndo ?? null);
     clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setMsg(''), 2600);
+    timer.current = window.setTimeout(() => setMsg(''), onUndo ? 5000 : 2600);
   }, []);
   const exec = useCallback(async (sql: string, params: unknown[] = []) => {
     const id = await api.run(sql, params);
@@ -55,7 +57,12 @@ export function Store({ children }: { children: ReactNode }) {
   return (
     <C.Provider value={{ ...data, page, go, anchor, setAnchor, exec, setSetting, reload, toast }}>
       {children}
-      {msg && <div className="toast">{msg}</div>}
+      {msg && (
+        <div className="toast">
+          {msg}
+          {undo && <button onClick={() => { undo(); setMsg(''); }}>Hoàn tác</button>}
+        </div>
+      )}
     </C.Provider>
   );
 }

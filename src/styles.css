@@ -342,3 +342,5 @@ input:not([type='checkbox']):not([type='color']), select { min-height: 42px; }
 .facts { gap: var(--s2); margin: var(--s4) 0; }
 .facts > div { padding: 14px; }
 .trend { font-weight: 600; } .trend.up { color: #12b76a; } .trend.down { color: #f04438; }
+.toast { display: flex; align-items: center; gap: var(--s3); }
+.toast button { color: #8fb3ff; font-weight: 600; }

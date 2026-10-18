@@ -93,7 +93,9 @@ export default function Dashboard() {
   const w = weekStats(s, s.anchor);
   const day = w.days.includes(sel) ? sel : w.days.includes(now) ? now : w.days[0];
 
-  const todays = s.tasks.filter((t) => t.due === now);
+  const todays = s.tasks.filter((t) => t.due === now && !t.done); // done tasks leave the list at once
+  const doneToday = s.tasks.some((t) => t.due === now && t.done);
+  const weekOpen = w.due.filter((t) => !t.done);
   const schedule = s.tasks.filter((t) => t.due === day).slice(0, 4);
   const dot = (d: string) => {
     const xs = s.tasks.filter((t) => t.due === d);
@@ -118,7 +120,7 @@ export default function Dashboard() {
           <button className="btn sm" onClick={() => setEdit({ due: now, priority: todays.filter((t) => t.priority).length < 3 ? 1 : 0 })}><Plus size={14} />Thêm việc</button>
         </header>
         {todays.slice(0, 3).map((t) => <TaskRow key={t.id} t={t} onEdit={setEdit} />)}
-        {!todays.length && <Empty>Chọn tối đa 3 việc quan trọng nhất cho hôm nay.</Empty>}
+        {!todays.length && <Empty>{doneToday ? 'Đã xong hết việc hôm nay.' : 'Chọn tối đa 3 việc quan trọng nhất cho hôm nay.'}</Empty>}
         <footer className="foot"><button className="link" onClick={() => s.go('tasks')}>Xem tất cả {todays.length} việc<ArrowRight size={14} /></button></footer>
       </section>
 
@@ -182,9 +184,9 @@ export default function Dashboard() {
           <h3><CheckSquare size={21} color="#1673ff" />Nhiệm vụ tuần này</h3>
           <button className="btn sm" onClick={() => setEdit({ due: w.days.includes(now) ? now : w.days[0] })}><Plus size={14} />Thêm việc</button>
         </header>
-        {w.due.slice(0, 5).map((t) => <TaskRow key={t.id} t={t} showDue onEdit={setEdit} />)}
-        {!w.due.length && <Empty>Chưa có nhiệm vụ nào trong tuần.</Empty>}
-        <footer className="foot"><button className="link" onClick={() => s.go('tasks')}>Xem tất cả {w.due.length} việc<ArrowRight size={14} /></button></footer>
+        {weekOpen.slice(0, 5).map((t) => <TaskRow key={t.id} t={t} showDue onEdit={setEdit} />)}
+        {!weekOpen.length && <Empty>{w.due.length ? 'Đã xong hết việc tuần này.' : 'Chưa có nhiệm vụ nào trong tuần.'}</Empty>}
+        <footer className="foot"><button className="link" onClick={() => s.go('tasks')}>Xem tất cả {weekOpen.length} việc còn lại<ArrowRight size={14} /></button></footer>
       </section>
 
       <section className="card c6">

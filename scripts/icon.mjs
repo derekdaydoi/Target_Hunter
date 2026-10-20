@@ -13,7 +13,7 @@ const svg = (body, w = 100, h = 100) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w * 8}" height="${h * 8}">${body}</svg>`;
 
 const word = (x, y, size, dark) =>
-  `<text x="${x}" y="${y}" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="${size}" letter-spacing="-1">` +
+  `<text xml:space="preserve" x="${x}" y="${y}" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="${size}" letter-spacing="-1">` +
   `<tspan fill="${dark}">Target </tspan><tspan fill="${BLUE}">Hunter</tspan></text>`;
 
 const files = {
@@ -27,5 +27,7 @@ mkdirSync('logo', { recursive: true });
 for (const [path, content] of Object.entries(files)) writeFileSync(path, content);
 
 await sharp(Buffer.from(files['logo/icon-light.svg'])).resize(512, 512).png().toFile('electron/icon.png');
-await sharp(Buffer.from(files['logo/logo-horizontal.svg'])).resize(1760).png().toFile('logo/logo-horizontal.png');
+// README banner: baked-in white rounded card so the logo stays readable on GitHub's dark theme
+const banner = svg(`<rect width="500" height="150" rx="26" fill="#fff"/><g transform="translate(30 25)">${mark()}${word(104, 68, 50, '#17243b')}</g>`, 500, 150);
+await sharp(Buffer.from(banner)).resize(1500).png().toFile('logo/logo-horizontal.png');
 console.log('icons written');

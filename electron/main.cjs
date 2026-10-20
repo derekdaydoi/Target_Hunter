@@ -74,18 +74,18 @@ function seed(withSamples) {
   const mon = shift(now, -((now.getDay() + 6) % 7));
   const d = (n) => ymd(shift(mon, n));
   const settings = {
-    name: 'Derek', ns_title: '100M net/tháng ở tuổi 30', ns_current: '17.9', ns_target: '100', ns_unit: 'M', ns_desc: 'Tự do tài chính thông qua kỹ năng, đầu tư và xây dựng sản phẩm.',
-    ns_target_year: String(now.getFullYear() + 6), quote: 'Kỷ luật hôm nay là tự do ngày mai.', remind_time: '08:30',
+    name: 'Alex', ns_title: 'Thu nhập 50M net/tháng', ns_current: '20', ns_target: '50', ns_unit: 'M', ns_desc: 'Dữ liệu mẫu: thay bằng mục tiêu của bạn ở nút Chỉnh sửa.',
+    ns_target_year: String(now.getFullYear() + 4), quote: 'Mỗi ngày một bước nhỏ.', remind_time: '08:30',
   };
   for (const [key, value] of Object.entries(settings)) insert('settings', { key, value });
   if (!withSamples) return setSetting('metrics_seeded', 1);
 
   // goal branches are measured by completion: each has milestones to tick off
-  [['Lending Domain', '#12b76a', ['Nắm quy trình thẩm định tín dụng', 'Đọc hết bộ chính sách sản phẩm vay', 'Viết 1 bản phân tích danh mục']],
-   ['SQL', '#2e90fa', ['SQL basic learning (Gitiho)', 'Window Functions', 'Dự án: phân tích khách hàng bằng SQL']],
-   ['Python', '#9b6cf6', ['Python cơ bản', 'Pandas cho phân tích dữ liệu']],
-   ['Power BI', '#fdb022', ['Khoá Power BI cơ bản', 'Dashboard tuần hoàn chỉnh']],
-   ['Product & Research', '#f97066', ['Đọc xong Mom-Test', 'Viết 3 decision memo']]]
+  [['Kỹ năng chuyên môn', '#12b76a', ['Hoàn thành khoá nền tảng', 'Làm bài tập thực hành', 'Viết bản tổng kết kiến thức']],
+   ['Phân tích dữ liệu', '#2e90fa', ['Học truy vấn cơ bản', 'Học hàm nâng cao', 'Dự án nhỏ: phân tích bộ dữ liệu mẫu']],
+   ['Lập trình', '#9b6cf6', ['Cú pháp cơ bản', 'Xử lý dữ liệu với thư viện']],
+   ['Báo cáo trực quan', '#fdb022', ['Khoá công cụ cơ bản', 'Dashboard hoàn chỉnh']],
+   ['Sản phẩm cá nhân', '#f97066', ['Phỏng vấn 5 người dùng', 'Viết 1 trang mô tả ý tưởng']]]
     .forEach(([name, color, steps], i) => {
       insert('tracks', { name, color });
       steps.forEach((title, j) => insert('milestones', { track_id: i + 1, title, done: i < 2 && j === 0 ? 1 : 0, done_at: i < 2 && j === 0 ? today : null }));
@@ -94,15 +94,20 @@ function seed(withSamples) {
   const task = (title, category, track_id, due, est, extra = {}) =>
     insert('tasks', { title, category, track_id, due, est, done: 0, priority: 0, ...extra });
   const done = (due) => ({ done: 1, done_at: due < today ? due : today });
-  task('Làm bài SQL (JOIN + Subquery)', 'Học tập', 2, today, 1.5, { priority: 1, t_start: '09:00', t_end: '10:30' });
+  task('Làm bài tập truy vấn dữ liệu', 'Học tập', 2, today, 1.5, { priority: 1, t_start: '09:00', t_end: '10:30' });
   task('Hoàn thiện dashboard tuần này', 'Dự án', 4, today, 2, { priority: 1, t_start: '10:30', t_end: '12:30' });
-  task('Đọc 30 trang Mom-Test', 'Sách', 5, today, 1, { priority: 1, t_start: '13:30', t_end: '14:30' });
-  task('Hoàn thành SQL bài Window Functions', 'Học tập', 2, d(0), 3, done(d(0)));
-  task('Viết 1 decision memo cho vấn đề X', 'Công việc', 5, d(1), 2, done(d(1)));
+  task('Đọc 30 trang sách chuyên ngành', 'Sách', 1, today, 1, { priority: 1, t_start: '13:30', t_end: '14:30' });
+  task('Hoàn thành bài học hàm nâng cao', 'Học tập', 2, d(0), 3, done(d(0)));
+  task('Viết ghi chú tổng kết tuần', 'Công việc', 1, d(1), 2, done(d(1)));
   task('Chuẩn bị nội dung thuyết trình', 'Công việc', null, d(3), 2);
-  task('Đọc 50 trang Value Proposition Design', 'Học tập', 5, d(4), 2);
+  task('Đọc 50 trang sách về thiết kế sản phẩm', 'Học tập', 5, d(4), 2);
   task('Tập gym 3 buổi', 'Sức khỏe', null, d(5), 3, { t_start: '19:00', t_end: '20:00' });
-  task('Lên kế hoạch Q4', 'Cá nhân', null, d(6), 1.5);
+  task('Lên kế hoạch quý tới', 'Cá nhân', null, d(6), 1.5);
+  // last week, so week-over-week figures have something to compare with
+  task('Học bài hàm cơ bản', 'Học tập', 2, d(-6), 1.5, done(d(-6)));
+  task('Làm dashboard mẫu', 'Dự án', 4, d(-4), 1, done(d(-4)));
+  task('Đọc tài liệu chuyên ngành', 'Sách', 1, d(-2), 1, done(d(-2)));
+  task('Tổng hợp ghi chú', 'Công việc', null, d(-1), 1);
 
   seedMetrics();
 }

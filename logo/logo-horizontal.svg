@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 100" width="3520" height="800">
   <path d="M46.1 18.24A32 32 0 1 0 81.82 53.34" stroke="#386ff1" stroke-width="17" fill="none"/>
   <path d="M56.65 18.7A32 32 0 0 1 81.69 45.55" stroke="#ff922f" stroke-width="17" fill="none"/>
-  <circle cx="50" cy="50" r="11.5" fill="#386ff1"/><text x="104" y="68" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="50" letter-spacing="-1"><tspan fill="#17243b">Target </tspan><tspan fill="#386ff1">Hunter</tspan></text></svg>
+  <circle cx="50" cy="50" r="11.5" fill="#386ff1"/><text xml:space="preserve" x="104" y="68" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="50" letter-spacing="-1"><tspan fill="#17243b">Target </tspan><tspan fill="#386ff1">Hunter</tspan></text></svg>

@@ -1,9 +1,9 @@
 {
   "name": "derekos",
   "productName": "Target Hunter",
-  "version": "1.5.1",
+  "version": "1.5.3",
   "description": "Target Hunter - local-first goal, task and weekly review app",
-  "author": "Derek",
+  "author": "derekdaydoi",
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {

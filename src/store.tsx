@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { api, today, type Data, type Metric, type MetricLog, type Milestone, type Review, type Task, type Track } from './lib';
+import { api, monday, today, type Data, type Metric, type MetricLog, type Milestone, type Review, type Task, type Track } from './lib';
 
 export type Page = 'home' | 'metrics' | 'goals' | 'tasks' | 'calendar' | 'stats' | 'review' | 'settings';
 type Ctx = Data & {
@@ -20,6 +20,7 @@ export function Store({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Data | null>(null);
   const [page, go] = useState<Page>(initialPage);
   const [anchor, setAnchor] = useState(today());
+  const [day, setDay] = useState(today());
   const [msg, setMsg] = useState('');
   const [undo, setUndo] = useState<(() => void) | null>(null);
   const timer = useRef(0);
@@ -37,6 +38,21 @@ export function Store({ children }: { children: ReactNode }) {
     setData({ settings: Object.fromEntries(s.map((r) => [r.key, r.value])), tracks, tasks, milestones, reviews, metrics, logs });
   }, []);
   useEffect(() => { reload(); }, [reload]);
+
+  // The app can stay open past midnight: when the date changes, re-render so "today" is right, and if the user was
+  // looking at the week that just ended, move to the new current week.
+  useEffect(() => {
+    const check = () => {
+      const t = today();
+      if (t === day) return;
+      setAnchor((a) => (monday(a) === monday(day) ? t : a));
+      setDay(t);
+    };
+    const id = window.setInterval(check, 30000);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => { clearInterval(id); window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
+  }, [day]);
 
   const toast = useCallback((m: string, onUndo?: () => void) => {
     setMsg(m);

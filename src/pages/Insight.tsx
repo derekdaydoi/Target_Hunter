@@ -112,7 +112,6 @@ function TrackLine({ t, onClick }: { t: Track; onClick(): void }) {
 
 // ---------- stats ----------
 const RANGES: [string, number][] = [['8 tuần gần nhất', 8], ['6 tháng', 26], ['1 năm', 52]];
-const signed = (n: number, unit = '') => `${n > 0 ? '+' : ''}${+n.toFixed(1)}${unit} so với tuần trước`;
 
 export function StatsPage() {
   const s = useStore();
@@ -128,10 +127,10 @@ export function StatsPage() {
   return (
     <div className="stack">
       <div className="tiles">
-        <StatTile icon={<Clock size={22} />} color="#1673ff" label="Tổng giờ tập trung" value={fmtH(done.reduce((x, t) => x + t.est, 0))} sub={signed(cur.hours - last.hours, 'h')} deco="line" />
-        <StatTile icon={<Target size={22} />} color="#12b76a" label="Tỷ lệ hoàn thành" value={`${pct(past.filter((t) => t.done).length, past.length)}%`} sub={signed(rate(cur) - rate(last), '%')} deco="line" />
-        <StatTile icon={<CheckCircle2 size={22} />} color="#8b5cf6" label="Nhiệm vụ đã xong" value={String(done.length)} sub={signed(cur.done - last.done)} />
-        <StatTile icon={<Flag size={22} />} color="#f79009" label="Mốc mục tiêu đã đạt" value={`${s.milestones.filter((m) => m.done).length}/${s.milestones.length}`} sub={signed(cur.wins - last.wins)} deco="line" />
+        <StatTile icon={<Clock size={22} />} color="#1673ff" label="Tổng giờ tập trung" value={fmtH(done.reduce((x, t) => x + t.est, 0))} trend={wow(cur.hours, last.hours)} deco="line" />
+        <StatTile icon={<Target size={22} />} color="#12b76a" label="Tỷ lệ hoàn thành" value={`${pct(past.filter((t) => t.done).length, past.length)}%`} trend={wow(rate(cur), rate(last))} deco="line" />
+        <StatTile icon={<CheckCircle2 size={22} />} color="#8b5cf6" label="Nhiệm vụ đã xong" value={String(done.length)} trend={wow(cur.done, last.done)} />
+        <StatTile icon={<Flag size={22} />} color="#f79009" label="Mốc mục tiêu đã đạt" value={`${s.milestones.filter((m) => m.done).length}/${s.milestones.length}`} trend={wow(cur.wins, last.wins)} deco="line" />
       </div>
       <div className="split">
         <section className="card">

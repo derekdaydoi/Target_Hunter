@@ -19,6 +19,8 @@
 
 ## Ảnh demo
 
+<sub>Chụp từ dữ liệu mẫu có sẵn khi mở app lần đầu (nhân vật "Alex"), không phải dữ liệu của người thật.</sub>
+
 | Tổng quan | Mục tiêu |
 |---|---|
 | ![Tổng quan](docs/screenshots/home.png) | ![Mục tiêu](docs/screenshots/goals.png) |
@@ -49,7 +51,7 @@
 
 Installer chưa ký số nên Windows SmartScreen có thể cảnh báo: chọn **More info → Run anyway**.
 
-Lần mở đầu tiên app có sẵn dữ liệu mẫu để bạn xem cách dùng. Sửa trực tiếp, hoặc xoá tại **Cài đặt → Xoá toàn bộ dữ liệu** rồi nhập mục tiêu của bạn. Dữ liệu nằm ở `%APPDATA%\DerekOS\derekos.sqlite` (giữ tên cũ để bản cập nhật không làm mất dữ liệu).
+Lần mở đầu tiên app có sẵn **dữ liệu mẫu** (nhân vật "Alex": mục tiêu, nhánh, mốc, nhiệm vụ, biến số) để bạn xem cách dùng. Bấm **Chỉnh sửa** ở mục tiêu chính và sửa trực tiếp, hoặc xoá hết tại **Cài đặt → Xoá toàn bộ dữ liệu** rồi nhập của bạn. Dữ liệu của bạn chỉ nằm trên máy, ở `%APPDATA%DerekOSderekos.sqlite` (giữ tên cũ để bản cập nhật không làm mất dữ liệu).
 
 ## Chạy từ mã nguồn
 

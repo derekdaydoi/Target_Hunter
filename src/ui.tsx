@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, MoreHorizontal, Star, X } from 'lucide-react';
-import { CATS, MAX_PRIORITY, fmtH, fmtShort, today, type Task } from './lib';
+import { CATS, MAX_PRIORITY, deadlineOf, fmtH, fmtShort, taskState, today, type Task } from './lib';
 import { useStore } from './store';
 
 export function Logo({ size = 30 }: { size?: number }) {
@@ -56,7 +56,7 @@ export const IconTile = ({ color = '#1673ff', size = '', children }: { color?: s
 /** Week-over-week change in %; null when last week had nothing to compare against. */
 export const wow = (cur: number, last: number) => (last ? Math.round(((cur - last) / last) * 100) : cur ? null : 0);
 
-function Trend({ pct, inverse }: { pct: number | null; inverse?: boolean }) {
+export function Trend({ pct, inverse }: { pct: number | null; inverse?: boolean }) {
   if (pct === null) return <small className="trend">— WoW</small>;
   const good = inverse ? pct < 0 : pct > 0;
   const cls = pct === 0 ? 'trend' : good ? 'trend up' : 'trend down';
@@ -170,7 +170,7 @@ export function TaskRow({ t, onEdit, showDue }: { t: Task; onEdit(t: Task): void
       <input type="checkbox" checked={!!t.done} onChange={() => a.toggle(t)} />
       <span className="title" onDoubleClick={() => onEdit(t)}>{t.title}</span>
       {t.category && <Tag label={t.category} />}
-      {showDue ? <span className={!t.done && t.due < today() ? 'meta late' : 'meta'}>{fmtShort(t.due)}</span>
+      {showDue ? <span className={taskState(t) === 'overdue' ? 'meta late' : 'meta'}>{fmtShort(t.due)}</span>
         : t.est > 0 && <span className="meta"><Clock size={13} />{fmtH(t.est)}</span>}
       <StarBtn t={t} />
       <button className="icon-btn" title="Sửa" onClick={() => onEdit(t)}><MoreHorizontal size={16} /></button>
@@ -190,8 +190,15 @@ export function TaskModal({ task, onClose }: { task: Partial<Task>; onClose(): v
     if (!f.title.trim()) return s.toast('Hãy nhập tên nhiệm vụ.');
     if (f.priority && a.priorityFull(f.due, task.id)) return s.toast(`Focus Filter: ngày này đã đủ ${MAX_PRIORITY} việc ưu tiên.`);
     const v = [f.title.trim(), f.note.trim() || null, f.category, f.track_id ? +f.track_id : null, f.due, +f.est || 0, f.priority ? 1 : 0, f.t_start || null, f.t_end || null];
-    if (task.id) await s.exec('UPDATE tasks SET title=?, note=?, category=?, track_id=?, due=?, est=?, priority=?, t_start=?, t_end=? WHERE id=?', [...v, task.id]);
-    else await s.exec('INSERT INTO tasks(title, note, category, track_id, due, est, priority, t_start, t_end) VALUES(?,?,?,?,?,?,?,?,?)', v);
+    if (task.id) {
+      // pushing an open task past its window breaks the commitment: allowed, but recorded for the discipline reports
+      const before = deadlineOf(task.due!, task.t_start), after = deadlineOf(f.due, f.t_start || null);
+      if (!task.done && after > before) {
+        await s.exec('INSERT INTO slips(task_id, title, date, from_due, to_due, deadline) VALUES(?,?,?,?,?,?)', [task.id, f.title.trim(), today(), task.due, f.due, before]);
+        s.toast('Đã dời hạn. Lần dời này được ghi vào thống kê kỷ luật.');
+      }
+      await s.exec('UPDATE tasks SET title=?, note=?, category=?, track_id=?, due=?, est=?, priority=?, t_start=?, t_end=? WHERE id=?', [...v, task.id]);
+    } else await s.exec('INSERT INTO tasks(title, note, category, track_id, due, est, priority, t_start, t_end) VALUES(?,?,?,?,?,?,?,?,?)', v);
     onClose();
   };
   const del = task.id ? async () => { await s.exec('DELETE FROM tasks WHERE id = ?', [task.id]); onClose(); } : undefined;
@@ -205,6 +212,7 @@ export function TaskModal({ task, onClose }: { task: Partial<Task>; onClose(): v
       <Field label="Ước lượng (giờ)"><input type="number" min="0" step="0.25" {...bind('est')} /></Field>
       <Field label="Bắt đầu"><input type="time" {...bind('t_start')} /></Field>
       <Field label="Kết thúc"><input type="time" {...bind('t_end')} /></Field>
+      <small className="hint wide">Có giờ bắt đầu: phải xong trong ngày đó. Chỉ có ngày: linh động đến hết Chủ nhật tuần đó. Dời qua hạn này sẽ được ghi vào thống kê kỷ luật.</small>
       <label className="check wide">
         <input type="checkbox" checked={!!f.priority} onChange={(e) => setF({ ...f, priority: e.target.checked ? '1' : '' })} />
         Việc ưu tiên của ngày (tối đa {MAX_PRIORITY})

@@ -4,12 +4,13 @@ export type Task = {
   id: number; title: string; category: string; track_id: number | null; due: string; est: number;
   done: number; done_at: string | null; priority: number; t_start: string | null; t_end: string | null; note: string | null;
 };
+export type Slip = { id: number; task_id: number; title: string; date: string; from_due: string; to_due: string; deadline: string };
 export type Review = { week: string; rating: string; wins: string; blockers: string; focus: string };
 export type Metric = { id: number; name: string; unit: string; start: number; target: number | null; note: string | null };
 export type MetricLog = { id: number; metric_id: number; date: string; value: number };
 export type Data = {
   settings: Record<string, string>; tracks: Track[]; milestones: Milestone[]; tasks: Task[];
-  reviews: Review[]; metrics: Metric[]; logs: MetricLog[];
+  reviews: Review[]; metrics: Metric[]; logs: MetricLog[]; slips: Slip[];
 };
 
 type Api = {
@@ -35,6 +36,17 @@ export const today = () => ymd(new Date());
 export const addDays = (s: string, n: number) => { const d = parse(s); d.setDate(d.getDate() + n); return ymd(d); };
 export const monday = (s: string) => addDays(s, -((parse(s).getDay() + 6) % 7));
 export const weekDays = (s: string) => Array.from({ length: 7 }, (_, i) => addDays(monday(s), i));
+export const daysBetween = (a: string, b: string) => Math.round((parse(b).getTime() - parse(a).getTime()) / 864e5);
+
+// ---------- discipline ----------
+/** A task with a start time must be done that day; one with only a date may move freely within its week (until Sunday). */
+export const deadlineOf = (due: string, t_start?: string | null) => (t_start ? due : addDays(monday(due), 6));
+export const deadline = (t: Task) => deadlineOf(t.due, t.t_start);
+export type TaskState = 'open' | 'overdue' | 'done' | 'late';
+export const taskState = (t: Task, now = today()): TaskState =>
+  t.done ? (t.done_at && t.done_at > deadline(t) ? 'late' : 'done') : now > deadline(t) ? 'overdue' : 'open';
+/** Open, date-only and from an earlier day of this week: still in its window, so it belongs on today's list. */
+export const carried = (t: Task, now = today()) => !t.done && !t.t_start && t.due < now && now <= deadline(t);
 
 const WD = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 export const WDS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -81,5 +93,16 @@ export function weekStats(d: Data, anchor: string) {
     // milestones (or whole branches) completed this week
     wins: d.milestones.filter((m) => m.done && inWeek(m.done_at)).length + d.tracks.filter((t) => t.done && inWeek(t.done_at)).length,
     review: d.reviews.find((r) => r.week === days[0]),
+    discipline: discipline(d, (s) => inWeek(s)),
   };
+}
+
+/** Commitments whose deadline falls in the period and is already settled: done on time, done late, missed, or pushed later. */
+export function discipline(d: Data, inPeriod: (date: string) => boolean, now = today()) {
+  const settled = d.tasks.filter((t) => inPeriod(deadline(t)) && taskState(t, now) !== 'open');
+  const of = (st: TaskState) => settled.filter((t) => taskState(t, now) === st);
+  const onTime = of('done'), late = of('late'), missed = of('overdue');
+  const slips = d.slips.filter((x) => inPeriod(x.deadline));
+  const total = onTime.length + late.length + missed.length + slips.length;
+  return { onTime, late, missed, slips, total, rate: total ? pct(onTime.length, total) : null };
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { AlarmClock, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, FileText, ListChecks, MoreHorizontal, Play, Plus, Target } from 'lucide-react';
-import { CATS, WDS, addDays, fmtH, fmtShort, monday, pct, today, weekDays, ymd, type Task } from '../lib';
+import { CATS, WDS, addDays, carried, deadline, fmtH, fmtShort, monday, pct, taskState, today, weekDays, ymd, type Task } from '../lib';
 import { useStore } from '../store';
 import { Bar, Empty, IconTile, Mountain, StarBtn, Tag, TaskModal, useTaskActions } from '../ui';
 
 const SCOPES = ['Hôm nay', 'Tuần này', 'Quá hạn', 'Tất cả'];
-const STATES = ['Tất cả trạng thái', 'Đang thực hiện', 'Quá hạn', 'Đã hoàn thành'];
+const STATES = ['Tất cả trạng thái', 'Đang thực hiện', 'Quá hạn', 'Đã hoàn thành', 'Xong trễ hạn'];
+const LABEL = { open: 'Đang thực hiện', overdue: 'Quá hạn', done: 'Đã hoàn thành', late: 'Xong trễ hạn' } as const;
 
 export function TasksPage() {
   const s = useStore();
@@ -17,16 +18,16 @@ export function TasksPage() {
   const [closed, setClosed] = useState<string[]>(['Đã hoàn thành']);
   const days = weekDays(s.anchor);
   const now = today();
-  const status = (t: Task) => (t.done ? 'Đã hoàn thành' : t.due < now ? 'Quá hạn' : 'Đang thực hiện');
+  const status = (t: Task) => LABEL[taskState(t, now)];
   const inScope = (t: Task) =>
-    scope === 'Hôm nay' ? t.due === now : scope === 'Tuần này' ? t.due >= days[0] && t.due <= days[6]
+    scope === 'Hôm nay' ? t.due === now || carried(t, now) : scope === 'Tuần này' ? t.due >= days[0] && t.due <= days[6]
       : scope === 'Quá hạn' ? status(t) === 'Quá hạn' : true;
   const scoped = s.tasks.filter(inScope);
   const list = scoped.filter((t) => (state === STATES[0] || status(t) === state) && (cat === 'Tất cả nhãn' || t.category === cat));
 
   const count = (st: string) => scoped.filter((t) => status(t) === st).length;
   const tiles: [typeof Target, string, string, number][] = [
-    [CheckCircle2, '#1673ff', 'Đã hoàn thành', count('Đã hoàn thành')],
+    [CheckCircle2, '#1673ff', 'Đã hoàn thành', scoped.filter((t) => t.done).length],
     [Play, '#12b76a', 'Đang thực hiện', count('Đang thực hiện')],
     [AlarmClock, '#f79009', 'Quá hạn', count('Quá hạn')],
     [ListChecks, '#667085', 'Tổng nhiệm vụ', scoped.length],
@@ -78,9 +79,9 @@ export function TasksPage() {
               <div key={t.id} className={t.done ? 'trow done' : 'trow'}>
                 <input type="checkbox" checked={!!t.done} onChange={() => a.toggle(t)} />
                 <div className="tname" onDoubleClick={() => setEdit(t)}><FileText size={16} /><span><b>{t.title}</b>{t.note && <small>{t.note}</small>}</span></div>
-                <span><Tag label={status(t)} color={color} /></span>
+                <span><Tag label={status(t)} color={status(t) === 'Xong trễ hạn' ? '#f79009' : color} /></span>
                 <span className="meta"><Clock size={14} />{fmtH(t.est)}</span>
-                <span className={status(t) === 'Quá hạn' ? 'meta late' : 'meta'}>{fmtShort(t.due)}/{t.due.slice(0, 4)}</span>
+                <span className={status(t) === 'Quá hạn' || status(t) === 'Xong trễ hạn' ? 'meta late' : 'meta'} title={t.t_start ? `Có giờ ${t.t_start}: phải xong trong ngày` : `Linh động đến hết CN ${fmtShort(deadline(t))}`}>{fmtShort(t.due)}/{t.due.slice(0, 4)}{t.t_start && ` · ${t.t_start}`}</span>
                 <span>{t.category && <Tag label={t.category} />}</span>
                 <span className="acts"><StarBtn t={t} /><button className="icon-btn" title="Sửa" onClick={() => setEdit(t)}><MoreHorizontal size={17} /></button></span>
               </div>

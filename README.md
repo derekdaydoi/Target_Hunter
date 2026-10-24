@@ -35,13 +35,14 @@
 
 ## Tính năng
 
-- **North Star**: một mục tiêu chính, có số hiện tại, số đích và tốc độ tăng trưởng cần đạt mỗi năm.
+- **Mục tiêu chính**: đo bằng một con số (nhập tay hoặc lấy từ biến số theo dõi, kèm tốc độ tăng trưởng cần đạt mỗi năm), hoặc gắn với các nhánh mục tiêu, ví dụ một giai đoạn "Phase 1: Data skills + Trading basic": xong các nhánh là xong mục tiêu.
 - **Nhánh mục tiêu và mốc**: chia mục tiêu lớn thành các nhánh; mỗi nhánh gồm các mốc đầu ra cụ thể. Tiến độ bằng số mốc đã hoàn thành.
 - **Theo dõi biến số**: tự định nghĩa con số cần đo (thu nhập, cân nặng, số buổi chạy…), đặt mục tiêu, ghi theo ngày và xem xu hướng.
 - **Nhiệm vụ**: bảng theo nhóm (quá hạn, tuần này, sắp tới, đã xong), lọc theo trạng thái và nhãn. Tối đa 3 việc ưu tiên mỗi ngày.
+- **Kỷ luật**: việc có giờ bắt đầu phải xong trong ngày; việc chỉ có ngày được linh động đến hết Chủ nhật tuần đó. Xong trễ, bỏ lỡ hay dời qua hạn đều được ghi lại để báo cáo.
 - **Lịch**: xem theo tháng, tuần hoặc năm; nhắc việc theo giờ khi app đang mở.
-- **Review tuần**: số liệu tự tính kèm thay đổi so với tuần trước (WoW), việc chưa xong theo nhóm, ba câu tự đánh giá.
-- **Thống kê**: giờ tập trung theo tuần, bản đồ nhịp làm việc 16 tuần, tiến độ từng nhánh.
+- **Review tuần**: số liệu tự tính kèm thay đổi so với tuần trước (WoW), tỉ lệ giữ đúng cam kết và danh sách từng lần trễ/bỏ lỡ/dời hạn, việc chưa xong theo nhóm, ba câu tự đánh giá.
+- **Thống kê**: giờ tập trung theo tuần, bản đồ nhịp làm việc 16 tuần, kỷ luật theo tuần, tiến độ từng nhánh.
 - **Dữ liệu của bạn**: lưu cục bộ bằng SQLite, không cần tài khoản hay internet; sao lưu, xuất/nhập JSON, xuất CSV.
 
 ## Cài đặt

@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
-  Activity, ArrowRight, BarChart3, BookOpen, Briefcase, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, Clock, Code2, Database, Download,
+  Activity, AlarmClock, ArrowRight, BarChart3, BookOpen, Briefcase, CalendarClock, CalendarDays, CheckCircle2, ChevronDown, CircleX, ChevronRight, Clock, Code2, Database, Download,
   FileText, Flag, FolderOpen, LayoutGrid, Layers, List, MoreHorizontal, Plus, Save, ShieldCheck, Sun, Target, Trash2, Upload, User,
 } from 'lucide-react';
-import { CATS, WDS, addDays, api, fmtH, fmtShort, monday, pct, today, trackProgress, weekStats, type Milestone, type Task, type Track } from '../lib';
+import { CATS, WDS, addDays, api, deadline, discipline, fmtH, fmtShort, monday, pct, today, trackProgress, weekStats, type Milestone, type Task, type Track } from '../lib';
 import { useStore } from '../store';
-import { Bar, Empty, Field, Head, IconTile, Modal, StatTile, wow, Tag, useForm, useTaskActions } from '../ui';
+import { Bar, Empty, Field, Head, IconTile, Modal, StatTile, Trend, wow, Tag, useForm, useTaskActions } from '../ui';
 import { NorthStar, TrackList } from './Dashboard';
 import { LineChart } from './Tracking';
 
@@ -94,7 +94,7 @@ export function GoalsPage() {
       </Head>
       {view === 'grid' ? <div className="goals">{s.tracks.map((t) => <TrackCard key={t.id} t={t} onEdit={() => setEdit(t)} />)}</div>
         : <section className="card">{s.tracks.map((t) => <TrackLine key={t.id} t={t} onClick={() => setEdit(t)} />)}</section>}
-      {!s.tracks.length && <section className="card"><Empty>Chia North Star thành 3–5 nhánh, mỗi nhánh vài mốc cụ thể để tick dần.</Empty></section>}
+      {!s.tracks.length && <section className="card"><Empty>Chia mục tiêu chính thành 3–5 nhánh, mỗi nhánh vài mốc cụ thể để tick dần.</Empty></section>}
       {edit && <TrackModal track={edit} onClose={() => setEdit(null)} />}
     </div>
   );
@@ -155,12 +155,54 @@ export function StatsPage() {
           <span className="heat-legend">Ít{[0, 1, 2, 3, 4].map((l) => <i key={l} className={'l' + l} />)}Nhiều</span>
         </section>
       </div>
+      <DisciplineCard title={`Kỷ luật ${RANGES.find(([, n]) => n === range)![0]}`} d={discipline(s, (d) => d >= weeks[0].date && d <= addDays(monday(now), 6))}>
+        {(() => {
+          const pts = weeks.map((w) => ({ date: w.date, value: discipline(s, (d) => d >= w.date && d <= addDays(w.date, 6)).rate }))
+            .filter((p): p is { date: string; value: number } => p.value != null);
+          return pts.length > 1 ? <LineChart points={pts} unit="%" height={190} zero /> : null;
+        })()}
+      </DisciplineCard>
       <section className="card">
         <Head icon={<Target size={22} />} title="Tiến độ theo nhánh mục tiêu" sub="Tỉ lệ mốc đã hoàn thành của từng nhánh mục tiêu." />
         {s.tracks.map((t) => <TrackLine key={t.id} t={t} onClick={() => s.go('goals')} />)}
         {!s.tracks.length && <Empty>Chưa có nhánh mục tiêu.</Empty>}
       </section>
     </div>
+  );
+}
+
+// ---------- discipline ----------
+const KINDS: [string, string, typeof Target][] = [
+  ['Đúng hạn', '#12b76a', CheckCircle2], ['Xong trễ hạn', '#f79009', AlarmClock], ['Bỏ lỡ', '#f04438', CircleX], ['Dời hạn', '#8b5cf6', CalendarClock],
+];
+
+/** Kept-commitment rate plus the four outcomes; `list` also names each breach. */
+function DisciplineCard({ title, d, last, list, children }: { title: string; d: ReturnType<typeof discipline>; last?: ReturnType<typeof discipline>; list?: boolean; children?: ReactNode }) {
+  const counts = [d.onTime.length, d.late.length, d.missed.length, d.slips.length];
+  const breaches: [number, string, string, string][] = [
+    ...d.late.map((t): [number, string, string, string] => [1, 'l' + t.id, t.title, `hạn ${fmtShort(deadline(t))}, xong ${fmtShort(t.done_at)}`]),
+    ...d.missed.map((t): [number, string, string, string] => [2, 'm' + t.id, t.title, `hạn ${fmtShort(deadline(t))}`]),
+    ...d.slips.map((x): [number, string, string, string] => [3, 's' + x.id, x.title, `${fmtShort(x.from_due)} → ${fmtShort(x.to_due)}`]),
+  ];
+  return (
+    <section className="card disc">
+      <Head icon={<ShieldCheck size={22} />} color="#12b76a" title={title}>
+        <span className="disc-rate">
+          <span><b>{d.rate == null ? '–' : `${d.rate}%`}</b>giữ đúng cam kết</span>
+          {last && <Trend pct={d.rate != null && last.rate != null ? wow(d.rate, last.rate) : null} />}
+        </span>
+      </Head>
+      <div className="facts">
+        {KINDS.map(([label, color, Icon], i) => (
+          <div key={label}><IconTile color={color} size="round"><Icon size={18} /></IconTile><span><small>{label}</small><b>{counts[i]}</b></span></div>
+        ))}
+      </div>
+      {children}
+      {list && breaches.map(([k, key, name, when]) => (
+        <div key={key} className="pillrow"><Tag label={KINDS[k][0]} color={KINDS[k][1]} /><span className="title">{name}</span><span className="meta">{when}</span></div>
+      ))}
+      {!d.total && <Empty>Chưa có việc nào tới hạn trong khoảng này.</Empty>}
+    </section>
   );
 }
 
@@ -224,6 +266,7 @@ export function ReviewPage() {
         <StatTile icon={<Target size={22} />} color="#8b5cf6" label="Mốc mục tiêu đạt được" value={String(w.wins)} trend={wow(w.wins, last.wins)} deco="line" />
         <StatTile icon={<FileText size={22} />} color="#f79009" label="Việc chưa xong" value={String(missed.length)} trend={wow(missed.length, last.due.length - last.done)} inverse deco="line" />
       </div>
+      <DisciplineCard title="Kỷ luật tuần này" d={w.discipline} last={last.discipline} list />
       <section className="card">
         <Head icon={<Target size={22} />} color="#f04438" title={`Danh sách chưa xong trong tuần (${missed.length})`}>
           <button className="btn" onClick={() => s.go('tasks')}>Xem tất cả<ArrowRight size={14} /></button>

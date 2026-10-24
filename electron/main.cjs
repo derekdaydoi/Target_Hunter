@@ -3,12 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js');
 
-const TABLES = ['settings', 'tracks', 'milestones', 'tasks', 'reviews', 'metrics', 'metric_logs'];
+const TABLES = ['settings', 'tracks', 'milestones', 'tasks', 'reviews', 'metrics', 'metric_logs', 'slips'];
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS tracks(id INTEGER PRIMARY KEY, name TEXT NOT NULL, color TEXT, done INTEGER DEFAULT 0, done_at TEXT);
 CREATE TABLE IF NOT EXISTS milestones(id INTEGER PRIMARY KEY, track_id INTEGER NOT NULL, title TEXT NOT NULL, done INTEGER DEFAULT 0, done_at TEXT);
 CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT, track_id INTEGER, due TEXT, est REAL DEFAULT 0, done INTEGER DEFAULT 0, done_at TEXT, priority INTEGER DEFAULT 0, t_start TEXT, t_end TEXT);
+CREATE TABLE IF NOT EXISTS slips(id INTEGER PRIMARY KEY, task_id INTEGER, title TEXT, date TEXT, from_due TEXT, to_due TEXT, deadline TEXT);
 CREATE TABLE IF NOT EXISTS reviews(week TEXT PRIMARY KEY, rating TEXT, wins TEXT, blockers TEXT, focus TEXT);
 CREATE TABLE IF NOT EXISTS metrics(id INTEGER PRIMARY KEY, name TEXT NOT NULL, unit TEXT, start REAL DEFAULT 0, target REAL);
 CREATE TABLE IF NOT EXISTS metric_logs(id INTEGER PRIMARY KEY, metric_id INTEGER NOT NULL, date TEXT NOT NULL, value REAL NOT NULL, UNIQUE(metric_id, date));
@@ -66,6 +67,14 @@ function seedMetrics() {
   metric('Cân nặng', 'kg', 72, 66, [[35, 72], [28, 71.6], [21, 71.1], [14, 70.9], [7, 70.2], [0, 69.8]]);
   metric('Giấc ngủ', 'giờ', 6, 7.5, [[9, 6], [8, 6.5], [7, 5.8], [6, 6.4], [5, 7], [4, 6.6], [3, 7.1], [2, 6.8], [1, 7.2], [0, 7]]);
   setSetting('metrics_seeded', 1);
+}
+
+/** Same rule as deadlineOf in src/lib.ts: timed tasks are due that day, date-only tasks by the Sunday of their week. */
+function deadlineOf(due, start) {
+  if (!due || start) return due;
+  const d = new Date(due + 'T00:00');
+  d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
+  return ymd(d);
 }
 
 function seed(withSamples) {
@@ -160,8 +169,13 @@ function registerIpc() {
   ipcMain.handle('data:exportCsv', async () => {
     const { filePath } = await dialog.showSaveDialog(win, { defaultPath: `derekos-tasks-${stamp()}.csv`, filters: [{ name: 'CSV', extensions: ['csv'] }] });
     if (!filePath) return false;
-    const rows = all('SELECT t.title, t.category, k.name AS track, t.due, t.est, t.done, t.done_at FROM tasks t LEFT JOIN tracks k ON k.id = t.track_id ORDER BY t.due');
-    const head = ['title', 'category', 'track', 'due', 'est', 'done', 'done_at'];
+    const now = ymd(new Date());
+    const rows = all('SELECT t.title, t.category, k.name AS track, t.due, t.t_start, t.est, t.done, t.done_at FROM tasks t LEFT JOIN tracks k ON k.id = t.track_id ORDER BY t.due')
+      .map((r) => {
+        const deadline = deadlineOf(r.due, r.t_start);
+        return { ...r, deadline, status: r.done ? (r.done_at > deadline ? 'late' : 'on_time') : now > deadline ? 'missed' : 'open' };
+      });
+    const head = ['title', 'category', 'track', 'due', 't_start', 'deadline', 'est', 'done', 'done_at', 'status'];
     // BOM so Excel reads Vietnamese correctly
     fs.writeFileSync(filePath, '\ufeff' + [head.join(','), ...rows.map((r) => head.map((h) => csvCell(r[h])).join(','))].join('\r\n'));
     return true;

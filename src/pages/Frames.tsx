@@ -5,7 +5,7 @@ import {
   type Frame, type FrameMode,
 } from '../lib';
 import { useStore } from '../store';
-import { Bar, Empty, Field, Head, IconTile, Modal, Trend, useForm, wow } from '../ui';
+import { Bar, Empty, Field, Head, IconTile, Masonry, Modal, Trend, useForm, wow } from '../ui';
 
 // group → colour and icon
 const GROUPS: Record<string, [string, typeof Droplet]> = {
@@ -273,7 +273,7 @@ export function FramesPage() {
         <button className="btn primary" onClick={() => setEdit({})}><Plus size={15} />Thêm khung</button>
       </section>
       {s.frames.length ? (
-        <div className="fr-grid">{s.frames.map((f) => <FrameCard key={f.id} f={f} onEdit={() => setEdit(f)} />)}</div>
+        <Masonry>{s.frames.map((f) => <FrameCard key={f.id} f={f} onEdit={() => setEdit(f)} />)}</Masonry>
       ) : (
         <section className="card fr-empty">
           <HeartPulse size={28} color="#386ff1" />

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
+import { Children, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, MoreHorizontal, Star, X } from 'lucide-react';
 import { CATS, MAX_PRIORITY, deadlineOf, fmtH, fmtShort, taskState, today, type Task } from './lib';
@@ -86,6 +86,43 @@ export function Head({ icon, color, title, sub, children }: { icon: ReactNode; c
 
 export function Field({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return <label className={wide ? 'field wide' : 'field'}><span>{label}</span>{children}</label>;
+}
+
+/**
+ * Masonry: as many columns of at least `min` px as fit, each item placed (in order) into the currently shortest
+ * column, so cards of different heights leave no gaps. Heights are measured after render; placement never
+ * changes a card's height, so the layout settles in one pass.
+ */
+export function Masonry({ children, min = 380, gap = 24 }: { children: ReactNode; min?: number; gap?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [heights, setHeights] = useState<number[]>([]);
+  const items = Children.toArray(children);
+  useLayoutEffect(() => {
+    const el = ref.current!;
+    const measure = () => {
+      setWidth(el.clientWidth);
+      const hs = items.map((_, i) => (el.querySelector(`[data-mi="${i}"]`) as HTMLElement | null)?.offsetHeight ?? 0);
+      setHeights((prev) => (prev.length === hs.length && prev.every((h, i) => Math.abs(h - hs[i]) < 2) ? prev : hs));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    el.querySelectorAll('[data-mi]').forEach((n) => ro.observe(n));
+    return () => ro.disconnect();
+  });
+  const n = Math.max(1, Math.floor((width + gap) / (min + gap)));
+  const cols = Array.from({ length: n }, () => ({ h: 0, xs: [] as ReactNode[] }));
+  items.forEach((item, i) => {
+    const col = cols.reduce((a, b) => (b.h < a.h ? b : a));
+    col.xs.push(<div key={i} data-mi={i}>{item}</div>);
+    col.h += (heights[i] ?? 0) + gap;
+  });
+  return (
+    <div ref={ref} className="masonry" style={{ gap }}>
+      {cols.map((c, i) => <div key={i} style={{ gap }}>{c.xs}</div>)}
+    </div>
+  );
 }
 
 /** Rendered into <body> so a card it is opened from (overflow, stacking, position) can never trap it. */

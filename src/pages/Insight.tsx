@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { Bar, Empty, Field, Head, IconTile, Modal, StatTile, Trend, wow, Tag, useForm, useTaskActions } from '../ui';
 import { NorthStar, TrackList } from './Dashboard';
 import { LineChart } from './Tracking';
+import { FramesWeek } from './Frames';
 
 // ---------- goals ----------
 function TrackModal({ track, onClose }: { track: Partial<Track>; onClose(): void }) {
@@ -267,6 +268,7 @@ export function ReviewPage() {
         <StatTile icon={<FileText size={22} />} color="#f79009" label="Việc chưa xong" value={String(missed.length)} trend={wow(missed.length, last.due.length - last.done)} inverse deco="line" />
       </div>
       <DisciplineCard title="Kỷ luật tuần này" d={w.discipline} last={last.discipline} list />
+      <FramesWeek anchor={s.anchor} />
       <section className="card">
         <Head icon={<Target size={22} />} color="#f04438" title={`Danh sách chưa xong trong tuần (${missed.length})`}>
           <button className="btn" onClick={() => s.go('tasks')}>Xem tất cả<ArrowRight size={14} /></button>

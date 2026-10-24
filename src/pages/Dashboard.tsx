@@ -4,6 +4,7 @@ import { SERIES, WDS, carried, daysBetween, fmtH, fmtN, fmtShort, metricView, pc
 import { useStore } from '../store';
 import { Bar, Empty, Field, IconTile, Modal, Mountain, Tag, TaskModal, TaskRow, useForm, useTaskActions } from '../ui';
 import { LineChart } from './Tracking';
+import { FramesCard } from './Frames';
 
 const ids = (v?: string) => (v ?? '').split(',').filter(Boolean).map(Number);
 
@@ -215,10 +216,12 @@ export default function Dashboard() {
         ))}
       </section>
 
+      <FramesCard />
+
       <section className="card c12">
         <header><h3><Activity size={21} color="#1673ff" />Các chỉ số đang theo dõi</h3><button className="link" onClick={() => s.go('metrics')}>Xem chi tiết<ArrowRight size={14} /></button></header>
         <div className="minis">
-          {s.metrics.slice(0, 4).map((m, i) => {
+          {s.metrics.map((m, i) => {
             const v = metricView(m, s.logs);
             return (
               <div key={m.id} className="mini" onClick={() => s.go('metrics')}>

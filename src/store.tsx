@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { api, monday, today, type Data, type Slip, type Metric, type MetricLog, type Milestone, type Review, type Task, type Track } from './lib';
+import { api, monday, today, type Data, type Frame, type FrameLog, type Slip, type Metric, type MetricLog, type Milestone, type Review, type Task, type Track } from './lib';
 
-export type Page = 'home' | 'metrics' | 'goals' | 'tasks' | 'calendar' | 'stats' | 'review' | 'settings';
+export type Page = 'home' | 'metrics' | 'frames' | 'goals' | 'tasks' | 'calendar' | 'stats' | 'review' | 'settings';
 type Ctx = Data & {
   page: Page; go(p: Page): void;
   anchor: string; setAnchor(s: string): void; // any date inside the week being viewed
@@ -26,7 +26,7 @@ export function Store({ children }: { children: ReactNode }) {
   const timer = useRef(0);
 
   const reload = useCallback(async () => {
-    const [s, tracks, tasks, milestones, reviews, metrics, logs, slips] = await Promise.all([
+    const [s, tracks, tasks, milestones, reviews, metrics, logs, slips, frames, flogs] = await Promise.all([
       api.all<{ key: string; value: string }>('SELECT * FROM settings'),
       api.all<Track>('SELECT * FROM tracks ORDER BY id'),
       api.all<Task>('SELECT * FROM tasks ORDER BY due, priority DESC, t_start IS NULL, t_start, id'),
@@ -35,8 +35,10 @@ export function Store({ children }: { children: ReactNode }) {
       api.all<Metric>('SELECT * FROM metrics ORDER BY id'),
       api.all<MetricLog>('SELECT * FROM metric_logs ORDER BY date, id'),
       api.all<Slip>('SELECT * FROM slips ORDER BY date, id'),
+      api.all<Frame>('SELECT * FROM frames ORDER BY id'),
+      api.all<FrameLog>('SELECT * FROM frame_logs ORDER BY date, id'),
     ]);
-    setData({ settings: Object.fromEntries(s.map((r) => [r.key, r.value])), tracks, tasks, milestones, reviews, metrics, logs, slips });
+    setData({ settings: Object.fromEntries(s.map((r) => [r.key, r.value])), tracks, tasks, milestones, reviews, metrics, logs, slips, frames, flogs });
   }, []);
   useEffect(() => { reload(); }, [reload]);
 

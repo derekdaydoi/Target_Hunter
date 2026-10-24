@@ -3,12 +3,14 @@ const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js');
 
-const TABLES = ['settings', 'tracks', 'milestones', 'tasks', 'reviews', 'metrics', 'metric_logs', 'slips'];
+const TABLES = ['settings', 'tracks', 'milestones', 'tasks', 'reviews', 'metrics', 'metric_logs', 'slips', 'frames', 'frame_logs'];
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS tracks(id INTEGER PRIMARY KEY, name TEXT NOT NULL, color TEXT, done INTEGER DEFAULT 0, done_at TEXT);
 CREATE TABLE IF NOT EXISTS milestones(id INTEGER PRIMARY KEY, track_id INTEGER NOT NULL, title TEXT NOT NULL, done INTEGER DEFAULT 0, done_at TEXT);
 CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT, track_id INTEGER, due TEXT, est REAL DEFAULT 0, done INTEGER DEFAULT 0, done_at TEXT, priority INTEGER DEFAULT 0, t_start TEXT, t_end TEXT);
+CREATE TABLE IF NOT EXISTS frames(id INTEGER PRIMARY KEY, name TEXT NOT NULL, grp TEXT, rules TEXT, mode TEXT NOT NULL DEFAULT 'remind', unit TEXT, target REAL, steps TEXT, times TEXT, days TEXT NOT NULL DEFAULT '1234567', since TEXT);
+CREATE TABLE IF NOT EXISTS frame_logs(id INTEGER PRIMARY KEY, frame_id INTEGER NOT NULL, date TEXT NOT NULL, item INTEGER NOT NULL DEFAULT 0, value REAL NOT NULL DEFAULT 1, UNIQUE(frame_id, date, item));
 CREATE TABLE IF NOT EXISTS slips(id INTEGER PRIMARY KEY, task_id INTEGER, title TEXT, date TEXT, from_due TEXT, to_due TEXT, deadline TEXT);
 CREATE TABLE IF NOT EXISTS reviews(week TEXT PRIMARY KEY, rating TEXT, wins TEXT, blockers TEXT, focus TEXT);
 CREATE TABLE IF NOT EXISTS metrics(id INTEGER PRIMARY KEY, name TEXT NOT NULL, unit TEXT, start REAL DEFAULT 0, target REAL);
@@ -77,6 +79,17 @@ function deadlineOf(due, start) {
   return ymd(d);
 }
 
+/** Starter life frames: part of the sample data, and offered on the Khung sống page while it is empty. */
+const FRAME_PRESET = [
+  { name: 'Uống nước', grp: 'Nước', mode: 'count', rules: '1 cốc ngay khi thức dậy\nKhông uống nhiều sau 21:00', unit: 'L', target: 2.5, steps: '0.25 0.5', times: '09:00,11:00,14:00,16:00,19:00', days: '1234567' },
+  { name: 'Bữa ăn & dinh dưỡng', grp: 'Ăn uống', mode: 'daily', rules: '3 bữa chính, không bỏ bữa sáng\nCó protein trong mỗi bữa\nRau trong ít nhất 2 bữa\nKhông ăn sau 21:00', times: '21:00', days: '1234567' },
+  { name: 'Supplement', grp: 'Supplement', mode: 'doses', rules: '07:30 Vitamin D3 + K2\n07:30 Omega-3\n21:30 Magie', days: '1234567' },
+  { name: 'Chạy bộ', grp: 'Vận động', mode: 'schedule', rules: '5 km nhẹ, giữ nhịp thở đều', times: '18:00', days: '247' },
+  { name: 'Giấc ngủ', grp: 'Giấc ngủ', mode: 'remind', rules: 'Tắt màn hình lúc 22:30\nLên giường 23:00, dậy 6:30', times: '22:30', days: '1234567' },
+];
+// `since`: the first day a frame counts toward keep rates
+const addFramePreset = (since = ymd(new Date())) => FRAME_PRESET.map((f) => { insert('frames', { ...f, since }); return db.exec('SELECT last_insert_rowid()')[0].values[0][0]; });
+
 function seed(withSamples) {
   const now = new Date();
   const today = ymd(now);
@@ -119,6 +132,15 @@ function seed(withSamples) {
   task('Tổng hợp ghi chú', 'Công việc', null, d(-1), 1);
 
   seedMetrics();
+
+  // a little frame history so the sample shows how keeping a frame looks
+  const [water, meals, supp, run] = addFramePreset(ymd(shift(now, -28)));
+  const log = (frame_id, daysAgo, value = 1, item = 0) => insert('frame_logs', { frame_id, date: ymd(shift(now, -daysAgo)), item, value });
+  [2.5, 2.75, 1.75, 2.5, 3, 2.25, 1.5].forEach((v, i) => log(water, 6 - i, v));
+  [6, 5, 3, 2, 1].forEach((n) => log(meals, n));
+  [6, 5, 4, 2, 1].forEach((n) => [0, 1, 2].forEach((item) => log(supp, n, 1, item)));
+  [0, 1].forEach((item) => log(supp, 0, 1, item));
+  for (let n = 1; n <= 21; n++) if ([2, 4, 7].includes(((shift(now, -n).getDay() + 6) % 7) + 1) && n % 5) log(run, n);
 }
 
 async function openDb() {
@@ -195,6 +217,7 @@ function registerIpc() {
   });
   ipcMain.handle('data:reset', () => { replaceAll({}); seed(false); flush(); return true; });
   ipcMain.handle('data:openDir', () => shell.openPath(app.getPath('userData')));
+  ipcMain.handle('frames:preset', () => { addFramePreset(); flush(); return true; });
 
 }
 
@@ -209,6 +232,24 @@ function startReminders() {
     const today = ymd(now);
     for (const t of all('SELECT title FROM tasks WHERE due = ? AND done = 0 AND t_start = ?', [today, hm])) {
       new Notification({ title: 'Đến giờ rồi', body: t.title }).show();
+    }
+    const weekday = String(((now.getDay() + 6) % 7) + 1);
+    for (const f of all('SELECT * FROM frames')) {
+      if (!f.days.includes(weekday)) continue;
+      const logs = all('SELECT item, value FROM frame_logs WHERE frame_id = ? AND date = ?', [f.id, today]);
+      if (f.mode === 'doses') { // each "HH:MM name" line reminds at its own time until ticked
+        (f.rules || '').split('\n').forEach((line, i) => {
+          const m = line.trim().match(/^(\d{1,2}:\d{2})\s+(.*)$/);
+          if (m && m[1].padStart(5, '0') === hm && !logs.some((l) => l.item === i)) new Notification({ title: f.name, body: `Đến giờ: ${m[2]}` }).show();
+        });
+        continue;
+      }
+      if (!(f.times || '').split(',').map((t) => t.trim().padStart(5, '0')).includes(hm)) continue;
+      const total = logs.reduce((s, l) => s + l.value, 0);
+      if (f.mode === 'count' && total >= (f.target || 0)) continue;
+      if ((f.mode === 'daily' || f.mode === 'schedule') && logs.length) continue;
+      const body = f.mode === 'count' ? `Mới được ${+total.toFixed(2)}/${f.target} ${f.unit || ''}` : (f.rules || '').split('\n').slice(0, 2).join(' · ');
+      new Notification({ title: f.name, body }).show();
     }
     const remind = all("SELECT value FROM settings WHERE key = 'remind_time'")[0]?.value;
     if (remind === hm) {

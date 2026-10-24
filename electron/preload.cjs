@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld('api', {
   backup: call('data:backup'),
   reset: call('data:reset'),
   openDataDir: call('data:openDir'),
+  addFramePreset: call('frames:preset'),
 });

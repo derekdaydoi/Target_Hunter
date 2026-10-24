@@ -5,19 +5,27 @@ export type Task = {
   done: number; done_at: string | null; priority: number; t_start: string | null; t_end: string | null; note: string | null;
 };
 export type Slip = { id: number; task_id: number; title: string; date: string; from_due: string; to_due: string; deadline: string };
+export type FrameMode = 'remind' | 'daily' | 'doses' | 'count' | 'schedule';
+export type Frame = {
+  id: number; name: string; grp: string; rules: string | null; mode: FrameMode;
+  unit: string | null; target: number | null; steps: string | null; times: string | null; days: string;
+  since: string | null; // first day that counts toward keep rates
+};
+export type FrameLog = { id: number; frame_id: number; date: string; item: number; value: number };
 export type Review = { week: string; rating: string; wins: string; blockers: string; focus: string };
 export type Metric = { id: number; name: string; unit: string; start: number; target: number | null; note: string | null };
 export type MetricLog = { id: number; metric_id: number; date: string; value: number };
 export type Data = {
   settings: Record<string, string>; tracks: Track[]; milestones: Milestone[]; tasks: Task[];
   reviews: Review[]; metrics: Metric[]; logs: MetricLog[]; slips: Slip[];
+  frames: Frame[]; flogs: FrameLog[];
 };
 
 type Api = {
   all<T>(sql: string, params?: unknown[]): Promise<T[]>;
   run(sql: string, params?: unknown[]): Promise<number>;
   exportJson(): Promise<boolean>; exportCsv(): Promise<boolean>; importJson(): Promise<boolean>;
-  backup(): Promise<boolean>; reset(): Promise<boolean>; openDataDir(): Promise<string>;
+  backup(): Promise<boolean>; reset(): Promise<boolean>; openDataDir(): Promise<string>; addFramePreset(): Promise<boolean>;
 };
 declare global { interface Window { api: Api } }
 export const api = window.api;
@@ -105,4 +113,48 @@ export function discipline(d: Data, inPeriod: (date: string) => boolean, now = t
   const slips = d.slips.filter((x) => inPeriod(x.deadline));
   const total = onTime.length + late.length + missed.length + slips.length;
   return { onTime, late, missed, slips, total, rate: total ? pct(onTime.length, total) : null };
+}
+
+// ---------- life frames ----------
+/** Weekday as 1 (Mon) … 7 (Sun): the digits stored in Frame.days. */
+export const isoDay = (s: string) => ((parse(s).getDay() + 6) % 7) + 1;
+export const lines = (s: string | null) => (s ?? '').split('\n').map((x) => x.trim()).filter(Boolean);
+export const appliesOn = (f: Frame, date: string) => f.days.includes(String(isoDay(date)));
+/** A dose line is "HH:MM name"; its time drives the reminder. */
+export const doses = (f: Frame) => lines(f.rules).map((l) => {
+  const m = l.match(/^(\d{1,2}:\d{2})\s+(.*)$/);
+  return m ? { time: m[1].padStart(5, '0'), name: m[2] } : { time: '', name: l };
+});
+export const dayLogs = (f: Frame, logs: FrameLog[], date: string) => logs.filter((l) => l.frame_id === f.id && l.date === date);
+export const dayTotal = (f: Frame, logs: FrameLog[], date: string) => dayLogs(f, logs, date).reduce((s, l) => s + l.value, 0);
+
+/** Did the day keep the frame? null when the frame asked nothing that day (reminder only, or not scheduled). */
+export function kept(f: Frame, logs: FrameLog[], date: string): boolean | null {
+  if (f.mode === 'remind' || !appliesOn(f, date) || (f.since && date < f.since)) return null;
+  const xs = dayLogs(f, logs, date);
+  if (f.mode === 'count') return xs.reduce((s, l) => s + l.value, 0) >= (f.target || 0);
+  if (f.mode === 'doses') { const n = doses(f).length; return n > 0 && doses(f).every((_, i) => xs.some((l) => l.item === i)); }
+  return xs.length > 0;
+}
+
+/** Kept share over `dates`: past days count either way, today only once kept (it is still in progress). */
+export function keepRate(frames: Frame[], logs: FrameLog[], dates: string[], now = today()) {
+  let asked = 0, done = 0;
+  for (const d of dates) {
+    if (d > now) continue;
+    for (const f of frames) {
+      const k = kept(f, logs, d);
+      if (k == null || (d === now && !k)) continue;
+      asked++; if (k) done++;
+    }
+  }
+  return { asked, done, rate: asked ? pct(done, asked) : null };
+}
+
+/** Schedule frames: sessions done on scheduled days vs scheduled days so far, plus sessions off the schedule. */
+export function adherence(f: Frame, logs: FrameLog[], days = 28, now = today()) {
+  const dates = Array.from({ length: days }, (_, i) => addDays(now, -i));
+  const r = keepRate([f], logs, dates, now);
+  const extra = dates.filter((d) => !appliesOn(f, d) && dayLogs(f, logs, d).length).length;
+  return { ...r, extra };
 }

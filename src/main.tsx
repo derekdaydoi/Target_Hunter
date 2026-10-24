@@ -1,6 +1,6 @@
 import { StrictMode, useState, type ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BarChart3, Bell, Calendar, CheckSquare, ChevronLeft, ChevronRight, ClipboardCheck, HeartPulse, Home, Search, Settings, Target, type LucideIcon } from 'lucide-react';
+import { BarChart3, Bell, Calendar, CheckSquare, ChevronLeft, ChevronRight, ClipboardCheck, HeartPulse, Home, Search, Settings, Target, type LucideIcon } from 'lucide-react';
 import '@fontsource/be-vietnam-pro/vietnamese-400.css';
 import '@fontsource/be-vietnam-pro/vietnamese-500.css';
 import '@fontsource/be-vietnam-pro/vietnamese-600.css';
@@ -15,7 +15,6 @@ import { Store, useStore, type Page } from './store';
 import { Bar, Logo } from './ui';
 import Dashboard from './pages/Dashboard';
 import { CalendarPage, TasksPage } from './pages/Work';
-import { MetricsPage } from './pages/Tracking';
 import { FramesPage } from './pages/Frames';
 import { GoalsPage, ReviewPage, SettingsPage, StatsPage } from './pages/Insight';
 
@@ -23,7 +22,6 @@ import { GoalsPage, ReviewPage, SettingsPage, StatsPage } from './pages/Insight'
 const NAV: [Page, string, LucideIcon, ComponentType, string | null][] = [
   ['home', 'Tổng quan', Home, Dashboard, ''],
   ['goals', 'Mục tiêu', Target, GoalsPage, null],
-  ['metrics', 'Theo dõi', Activity, MetricsPage, null],
   ['frames', 'Khung sống', HeartPulse, FramesPage, 'Chuẩn sống của bạn, luôn trong tầm mắt. Nhập ít, nhắc đúng lúc.'],
   ['tasks', 'Nhiệm vụ', CheckSquare, TasksPage, 'Quản lý công việc hằng ngày, tập trung vào những gì quan trọng.'],
   ['calendar', 'Lịch', Calendar, CalendarPage, null],
@@ -40,7 +38,6 @@ function SearchBox() {
   const results: [Page, string, string][] = !k ? [] : [
     ...s.tasks.filter((t) => hit(t.title) || hit(t.note)).map((t): [Page, string, string] => ['tasks', 'Nhiệm vụ', t.title]),
     ...s.milestones.filter((m) => hit(m.title)).map((m): [Page, string, string] => ['goals', 'Mốc mục tiêu', m.title]),
-    ...s.metrics.filter((m) => hit(m.name)).map((m): [Page, string, string] => ['metrics', 'Biến số', m.name]),
     ...s.frames.filter((f) => hit(f.name) || hit(f.rules)).map((f): [Page, string, string] => ['frames', 'Khung sống', f.name]),
   ].slice(0, 8);
   return (

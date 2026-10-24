@@ -151,11 +151,6 @@ textarea { resize: vertical; }
 .slot.done span { text-decoration: line-through; color: #98a2b3; }
 .kpi { display: grid; grid-template-columns: 26px 1fr auto 16px; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--hair); color: #98a2b3; cursor: pointer; flex: 1; }
 .kpi span { color: var(--text); } .kpi b { color: var(--text); } .kpi b.warn { color: #f79009; }
-.minis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 14px; }
-.mini { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 14px; cursor: pointer; min-width: 0; }
-.mini:hover { border-color: #c7d7f5; }
-.mini > span { display: grid; gap: 2px; min-width: 0; } .mini b { font-size: 19px; }
-.mini .chartbox { grid-column: 1 / -1; } .mini .empty { padding: 4px 0 0; font-size: 12px; }
 
 /* ---------- stat tiles ---------- */
 .stat { flex-direction: row; align-items: center; gap: 14px; overflow: hidden; }
@@ -163,12 +158,6 @@ textarea { resize: vertical; }
 .deco { position: absolute; right: 14px; bottom: 12px; width: 92px; pointer-events: none; }
 
 /* ---------- tracking ---------- */
-.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 16px; }
-.delta { display: grid; justify-items: end; gap: 1px; } .delta b { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.metric-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: center; }
-.metric-body > div:first-child { display: grid; gap: 8px; }
-.hero-num { font-size: 40px; letter-spacing: -1px; line-height: 1; } .hero-num small { font-size: 15px; margin-left: 6px; }
-.sparkbox { border-radius: 12px; padding: 6px; }
 .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
 .facts > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; gap: 10px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04); }
 .facts span { display: grid; gap: 3px; min-width: 0; } .facts b { font-size: 13px; }
@@ -333,12 +322,6 @@ input:not([type='checkbox']):not([type='color']), select { min-height: 42px; }
 /* ---------- tracking: fewer, larger cards; banner text never runs under the illustration ---------- */
 .banner > div:first-child { flex: 0 1 auto; max-width: min(560px, calc(100% - 520px)); }
 .banner > .btn { margin-left: auto; }
-.metrics { grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: var(--s4); }
-.metric { padding: var(--s4); gap: var(--s1); }
-.metric .head { margin-bottom: var(--s3); }
-.metric-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--s4); }
-.hero-num { font-size: 46px; }
-.sparkbox { padding: var(--s2); }
 .facts { gap: var(--s2); margin: var(--s4) 0; }
 .facts > div { padding: 14px; }
 .trend { font-weight: 600; } .trend.up { color: #12b76a; } .trend.down { color: #f04438; }
@@ -364,7 +347,6 @@ input:not([type='checkbox']):not([type='color']), select { min-height: 42px; }
 .hero-title, .hero-desc { max-width: 62%; }
 
 /* ---------- life frames ---------- */
-.minis { grid-auto-flow: row; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 .fr-summary { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--s4) 28px; }
 .fr-stat { display: grid; gap: 2px; }
 .fr-stat small { color: #667085; font-size: 13px; }

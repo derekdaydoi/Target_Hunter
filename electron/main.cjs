@@ -54,22 +54,6 @@ function insert(table, row) {
 
 const setSetting = (key, value) => db.run('INSERT OR REPLACE INTO settings(key, value) VALUES(?, ?)', [key, String(value)]);
 
-// Sample tracked variables. The income metric feeds the North Star card.
-function seedMetrics() {
-  const now = new Date();
-  const get = (key) => all('SELECT value FROM settings WHERE key = ?', [key])[0]?.value;
-  const metric = (name, unit, start, target, logs) => {
-    insert('metrics', { name, unit, start, target });
-    const metric_id = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
-    logs.forEach(([daysAgo, value]) => insert('metric_logs', { metric_id, date: ymd(shift(now, -daysAgo)), value }));
-    return metric_id;
-  };
-  const income = +get('ns_current') || 0;
-  setSetting('ns_metric_id', metric('Thu nhập net/tháng', get('ns_unit') || 'M', income, +get('ns_target') || null, [[0, income]]));
-  metric('Cân nặng', 'kg', 72, 66, [[35, 72], [28, 71.6], [21, 71.1], [14, 70.9], [7, 70.2], [0, 69.8]]);
-  metric('Giấc ngủ', 'giờ', 6, 7.5, [[9, 6], [8, 6.5], [7, 5.8], [6, 6.4], [5, 7], [4, 6.6], [3, 7.1], [2, 6.8], [1, 7.2], [0, 7]]);
-  setSetting('metrics_seeded', 1);
-}
 
 /** Same rule as deadlineOf in src/lib.ts: timed tasks are due that day, date-only tasks by the Sunday of their week. */
 function deadlineOf(due, start) {
@@ -100,7 +84,7 @@ function seed(withSamples) {
     ns_target_year: String(now.getFullYear() + 4), quote: 'Mỗi ngày một bước nhỏ.', remind_time: '08:30',
   };
   for (const [key, value] of Object.entries(settings)) insert('settings', { key, value });
-  if (!withSamples) return setSetting('metrics_seeded', 1);
+  if (!withSamples) return;
 
   // goal branches are measured by completion: each has milestones to tick off
   [['Kỹ năng chuyên môn', '#12b76a', ['Hoàn thành khoá nền tảng', 'Làm bài tập thực hành', 'Viết bản tổng kết kiến thức']],
@@ -131,7 +115,6 @@ function seed(withSamples) {
   task('Đọc tài liệu chuyên ngành', 'Sách', 1, d(-2), 1, done(d(-2)));
   task('Tổng hợp ghi chú', 'Công việc', null, d(-1), 1);
 
-  seedMetrics();
 
   // a little frame history so the sample shows how keeping a frame looks
   const [water, meals, supp, run] = addFramePreset(ymd(shift(now, -28)));
@@ -155,7 +138,6 @@ async function openDb() {
     if (!all(`PRAGMA table_info(${t})`).some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} TEXT`);
   }
   if (fresh) seed(true);
-  else if (!all("SELECT 1 FROM settings WHERE key = 'metrics_seeded'").length) seedMetrics(); // upgrade from 1.0
   flush();
 }
 

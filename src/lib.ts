@@ -13,11 +13,9 @@ export type Frame = {
 };
 export type FrameLog = { id: number; frame_id: number; date: string; item: number; value: number };
 export type Review = { week: string; rating: string; wins: string; blockers: string; focus: string };
-export type Metric = { id: number; name: string; unit: string; start: number; target: number | null; note: string | null };
-export type MetricLog = { id: number; metric_id: number; date: string; value: number };
 export type Data = {
   settings: Record<string, string>; tracks: Track[]; milestones: Milestone[]; tasks: Task[];
-  reviews: Review[]; metrics: Metric[]; logs: MetricLog[]; slips: Slip[];
+  reviews: Review[]; slips: Slip[];
   frames: Frame[]; flogs: FrameLog[];
 };
 
@@ -34,7 +32,6 @@ export const CATS: Record<string, string> = {
   'Học tập': '#2e90fa', 'Công việc': '#12b76a', 'Dự án': '#0e9384', 'Sách': '#f79009',
   'Sức khỏe': '#7a5af8', 'Cá nhân': '#ee46bc', 'Kế hoạch': '#667085',
 };
-export const SERIES = ['#1673ff', '#f0458f', '#12b76a', '#8b5cf6']; // chart color per tracked variable, by position
 export const MAX_PRIORITY = 3; // Focus Filter: at most 3 priority tasks per day
 
 // ---------- dates (local, ISO yyyy-mm-dd strings) ----------
@@ -73,21 +70,6 @@ export function trackProgress(t: Track, milestones: Milestone[]) {
   const items = milestones.filter((m) => m.track_id === t.id);
   const done = items.filter((m) => m.done).length;
   return { items, done, total: items.length, pct: items.length ? pct(done, items.length) : t.done ? 100 : 0 };
-}
-
-/** Current value, change and progress of a tracked variable. Logs arrive sorted by date. */
-export function metricView(m: Metric, logs: MetricLog[]) {
-  const pts = logs.filter((l) => l.metric_id === m.id);
-  const cur = pts.length ? pts[pts.length - 1].value : m.start;
-  const prev = pts.length > 1 ? pts[pts.length - 2].value : m.start;
-  const span = m.target == null ? 0 : m.target - m.start;
-  return {
-    pts, cur,
-    delta: cur - prev,
-    progress: span ? Math.max(0, Math.min(100, Math.round(((cur - m.start) / span) * 100))) : null,
-    // is the latest change moving toward the target?
-    good: span !== 0 && cur !== prev ? (cur - prev) * span > 0 : null,
-  };
 }
 
 export function weekStats(d: Data, anchor: string) {

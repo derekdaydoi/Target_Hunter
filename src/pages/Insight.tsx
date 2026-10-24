@@ -7,7 +7,7 @@ import { CATS, WDS, addDays, api, deadline, discipline, fmtH, fmtShort, monday, 
 import { useStore } from '../store';
 import { Bar, Empty, Field, Head, IconTile, Modal, StatTile, Trend, wow, Tag, useForm, useTaskActions } from '../ui';
 import { NorthStar, TrackList } from './Dashboard';
-import { LineChart } from './Tracking';
+import { LineChart } from './Chart';
 import { FramesWeek } from './Frames';
 
 // ---------- goals ----------

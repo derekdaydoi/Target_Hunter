@@ -25,23 +25,22 @@
 |---|---|
 | ![Tổng quan](docs/screenshots/home.png) | ![Khung sống](docs/screenshots/frames.png) |
 
-| Mục tiêu | Theo dõi biến số |
+| Mục tiêu | Nhiệm vụ |
 |---|---|
-| ![Mục tiêu](docs/screenshots/goals.png) | ![Theo dõi](docs/screenshots/metrics.png) |
+| ![Mục tiêu](docs/screenshots/goals.png) | ![Nhiệm vụ](docs/screenshots/tasks.png) |
 
-| Nhiệm vụ | Lịch |
+| Lịch | Thống kê |
 |---|---|
-| ![Nhiệm vụ](docs/screenshots/tasks.png) | ![Lịch](docs/screenshots/calendar.png) |
+| ![Lịch](docs/screenshots/calendar.png) | ![Thống kê](docs/screenshots/stats.png) |
 
-| Review tuần | Thống kê |
-|---|---|
-| ![Review tuần](docs/screenshots/review.png) | ![Thống kê](docs/screenshots/stats.png) |
+| Review tuần |
+|---|
+| ![Review tuần](docs/screenshots/review.png) |
 
 ## Tính năng
 
-- **Mục tiêu chính**: đo bằng một con số (nhập tay hoặc lấy từ biến số theo dõi, kèm tốc độ tăng trưởng cần đạt mỗi năm), hoặc gắn với các nhánh mục tiêu, ví dụ một giai đoạn "Phase 1: Data skills + Trading basic": xong các nhánh là xong mục tiêu.
+- **Mục tiêu chính**: đo bằng một con số (kèm tốc độ tăng trưởng cần đạt mỗi năm), hoặc gắn với các nhánh mục tiêu, ví dụ một giai đoạn "Phase 1: Data skills + Trading basic": xong các nhánh là xong mục tiêu.
 - **Nhánh mục tiêu và mốc**: chia mục tiêu lớn thành các nhánh; mỗi nhánh gồm các mốc đầu ra cụ thể. Tiến độ bằng số mốc đã hoàn thành.
-- **Theo dõi biến số**: tự định nghĩa con số kết quả cần đo (thu nhập, cân nặng, vòng eo…), đặt mục tiêu, ghi theo ngày và xem xu hướng.
 - **Khung sống**: chuẩn sống bạn muốn giữ (ăn uống, nước, supplement, vận động, giấc ngủ…), mỗi khung chọn cách theo dõi: chỉ nhắc, tick mỗi ngày, tick theo giờ, đếm theo ngày, hoặc theo lịch (chạy, cầu lông: đo tỉ lệ tuân thủ lịch, không đặt mục tiêu số buổi). App chỉ nhắc khi hôm nay chưa giữ khung.
 - **Nhiệm vụ**: bảng theo nhóm (quá hạn, tuần này, sắp tới, đã xong), lọc theo trạng thái và nhãn. Tối đa 3 việc ưu tiên mỗi ngày.
 - **Kỷ luật**: việc có giờ bắt đầu phải xong trong ngày; việc chỉ có ngày được linh động đến hết Chủ nhật tuần đó. Xong trễ, bỏ lỡ hay dời qua hạn đều được ghi lại để báo cáo.
@@ -57,7 +56,7 @@
 
 Installer chưa ký số nên Windows SmartScreen có thể cảnh báo: chọn **More info → Run anyway**.
 
-Lần mở đầu tiên app có sẵn **dữ liệu mẫu** (nhân vật "Alex": mục tiêu, nhánh, mốc, nhiệm vụ, biến số) để bạn xem cách dùng. Bấm **Chỉnh sửa** ở mục tiêu chính và sửa trực tiếp, hoặc xoá hết tại **Cài đặt → Xoá toàn bộ dữ liệu** rồi nhập của bạn. Dữ liệu của bạn chỉ nằm trên máy, ở `%APPDATA%DerekOSderekos.sqlite` (giữ tên cũ để bản cập nhật không làm mất dữ liệu).
+Lần mở đầu tiên app có sẵn **dữ liệu mẫu** (nhân vật "Alex": mục tiêu, nhánh, mốc, nhiệm vụ, khung sống) để bạn xem cách dùng. Bấm **Chỉnh sửa** ở mục tiêu chính và sửa trực tiếp, hoặc xoá hết tại **Cài đặt → Xoá toàn bộ dữ liệu** rồi nhập của bạn. Dữ liệu của bạn chỉ nằm trên máy, ở `%APPDATA%DerekOSderekos.sqlite` (giữ tên cũ để bản cập nhật không làm mất dữ liệu).
 
 ## Chạy từ mã nguồn
 
@@ -84,7 +83,7 @@ src/           giao diện React + TypeScript
   store.tsx      trạng thái dùng chung, đọc/ghi dữ liệu
   ui.tsx         thành phần dùng lại (thẻ, cửa sổ, logo)
   styles.css     toàn bộ style
-  pages/         Dashboard, Insight (Mục tiêu, Thống kê, Review, Cài đặt), Work (Nhiệm vụ, Lịch), Tracking
+  pages/         Dashboard, Insight (Mục tiêu, Thống kê, Review, Cài đặt), Work (Nhiệm vụ, Lịch), Frames (Khung sống), Chart (biểu đồ)
 scripts/       sinh logo và icon
 logo/          bộ logo
 docs/          ảnh demo

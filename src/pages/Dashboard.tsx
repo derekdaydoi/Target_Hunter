@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Activity, ArrowRight, BarChart3, CalendarDays, CheckCircle2, CheckSquare, ChevronRight, Flag, Pencil, Plus, Smile, Sun, Target, Timer, TrendingUp } from 'lucide-react';
-import { SERIES, WDS, carried, daysBetween, fmtH, fmtN, fmtShort, metricView, pct, today, trackProgress, weekStats, type Task } from '../lib';
+import { ArrowRight, BarChart3, CalendarDays, CheckCircle2, CheckSquare, ChevronRight, Flag, Pencil, Plus, Smile, Sun, Target, Timer, TrendingUp } from 'lucide-react';
+import { WDS, carried, daysBetween, fmtH, fmtN, fmtShort, pct, today, trackProgress, weekStats, type Task } from '../lib';
 import { useStore } from '../store';
-import { Bar, Empty, Field, IconTile, Modal, Mountain, Tag, TaskModal, TaskRow, useForm, useTaskActions } from '../ui';
-import { LineChart } from './Tracking';
+import { Bar, Empty, Field, Modal, Mountain, Tag, TaskModal, TaskRow, useForm, useTaskActions } from '../ui';
 import { FramesCard } from './Frames';
 
 const ids = (v?: string) => (v ?? '').split(',').filter(Boolean).map(Number);
@@ -12,7 +11,7 @@ function NorthStarModal({ onClose }: { onClose(): void }) {
   const s = useStore();
   const st = s.settings;
   const { f, bind } = useForm({
-    source: st.ns_source === 'tracks' ? 'tracks' : st.ns_metric_id ?? '',
+    source: st.ns_source === 'tracks' ? 'tracks' : '',
     ns_title: st.ns_title ?? '', ns_desc: st.ns_desc ?? '',
     ns_current: st.ns_current ?? '0', ns_target: st.ns_target ?? '0',
     ns_unit: st.ns_unit ?? '', ns_target_year: st.ns_target_year ?? '', ns_due: st.ns_due ?? '',
@@ -22,7 +21,7 @@ function NorthStarModal({ onClose }: { onClose(): void }) {
   const flip = (id: number) => setPicked(picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id]);
   const save = async () => {
     const { source, ...rest } = f;
-    const vals = { ...rest, ns_source: byTracks ? 'tracks' : '', ns_metric_id: byTracks ? '' : source, ns_tracks: picked.join(',') };
+    const vals = { ...rest, ns_source: source, ns_tracks: picked.join(',') };
     for (const [k, v] of Object.entries(vals)) await s.setSetting(k, v);
     onClose();
   };
@@ -34,7 +33,6 @@ function NorthStarModal({ onClose }: { onClose(): void }) {
         <select {...bind('source')}>
           <option value="tracks">Nhánh mục tiêu: xong các nhánh đã chọn là xong mục tiêu</option>
           <option value="">Con số nhập tay</option>
-          {s.metrics.map((m) => <option key={m.id} value={m.id}>Con số lấy từ biến số: {m.name}</option>)}
         </select>
       </Field>
       {byTracks ? (
@@ -64,13 +62,12 @@ function NorthStarModal({ onClose }: { onClose(): void }) {
   );
 }
 
-/** Main goal measured by a number: typed in, or the latest value of a tracked variable. */
+/** Main goal measured by a typed-in number. */
 function ByNumber() {
-  const { settings: st, metrics, logs } = useStore();
-  const linked = metrics.find((m) => String(m.id) === st.ns_metric_id);
-  const cur = linked ? metricView(linked, logs).cur : +st.ns_current || 0;
-  const tgt = linked?.target ?? (+st.ns_target || 0);
-  const unit = linked ? linked.unit : st.ns_unit ?? '';
+  const { settings: st } = useStore();
+  const cur = +st.ns_current || 0;
+  const tgt = +st.ns_target || 0;
+  const unit = st.ns_unit ?? '';
   const year = new Date().getFullYear();
   const years = Math.max(0, (+st.ns_target_year || year) - year);
   const growth = cur > 0 && tgt > cur && years > 0 ? (Math.pow(tgt / cur, 1 / years) - 1) * 100 : 0;
@@ -218,33 +215,6 @@ export default function Dashboard() {
 
       <FramesCard />
 
-      <section className="card c12">
-        <header><h3><Activity size={21} color="#1673ff" />Các chỉ số đang theo dõi</h3><button className="link" onClick={() => s.go('metrics')}>Xem chi tiết<ArrowRight size={14} /></button></header>
-        <div className="minis">
-          {s.metrics.map((m, i) => {
-            const v = metricView(m, s.logs);
-            return (
-              <div key={m.id} className="mini" onClick={() => s.go('metrics')}>
-                <IconTile color={SERIES[i % SERIES.length]} size="round"><Activity size={20} /></IconTile>
-                <span><small>{m.name}</small><b>{fmtN(v.cur)} <small>{m.unit}</small></b></span>
-                <LineChart compact height={44} points={v.pts} target={m.target} unit={m.unit} color={SERIES[i % SERIES.length]} />
-              </div>
-            );
-          })}
-          {s.metrics.length < 4 && (
-            <div className="mini" onClick={() => s.go('stats')}>
-              <IconTile color="#12b76a" size="round"><Timer size={20} /></IconTile>
-              <span><small>Thời gian tập trung tuần này</small><b>{fmtH(w.hours)}</b></span>
-            </div>
-          )}
-          {s.metrics.length < 3 && (
-            <div className="mini" onClick={() => s.go('goals')}>
-              <IconTile color="#8b5cf6" size="round"><Flag size={20} /></IconTile>
-              <span><small>Mốc mục tiêu đạt được</small><b>{s.milestones.filter((m) => m.done).length}/{s.milestones.length}</b></span>
-            </div>
-          )}
-        </div>
-      </section>
 
       <section className="card c6">
         <header>

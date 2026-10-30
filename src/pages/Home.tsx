@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { CalendarPlus, ChevronDown, ChevronRight, MoreHorizontal, Plus, Repeat, Settings, Target, X } from 'lucide-react';
-import { dayLogs, dayTotal, doses, fmtLong, fmtN, kept, lines, pct, today, trackProgress, appliesOn, type Frame, type Milestone, type Task, type Track } from '../lib';
+import { CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Plus, Repeat, Settings, Target, X } from 'lucide-react';
+import { addDays, dayLogs, dayTotal, doses, fmtLong, fmtN, kept, lines, monday, pct, today, trackProgress, appliesOn, weekDays, type Frame, type Milestone, type Task, type Track } from '../lib';
 import { useStore } from '../store';
-import { Logo, TaskModal } from '../ui';
+import { Logo, TaskModal, useTaskActions } from '../ui';
 import { NorthStarModal } from './Dashboard';
 import { SettingsPage, TrackModal } from './Insight';
 import { FrameModal, groupOf, stepsOf, useFrameActions } from './Frames';
@@ -15,7 +15,12 @@ function useOpen() {
     try { return JSON.parse(localStorage.getItem(OPEN_KEY) ?? '') as string[]; } catch { return ['goal', 'routine']; }
   });
   useEffect(() => { try { localStorage.setItem(OPEN_KEY, JSON.stringify(open)); } catch { /* storage may be unavailable */ } }, [open]);
-  return { is: (k: string) => open.includes(k), flip: (k: string) => setOpen(open.includes(k) ? open.filter((x) => x !== k) : [...open, k]), show: (k: string) => !open.includes(k) && setOpen([...open, k]) };
+  // functional updates so several quick toggles in a row all land
+  return {
+    is: (k: string) => open.includes(k),
+    flip: (k: string) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k])),
+    show: (k: string) => setOpen((o) => (o.includes(k) ? o : [...o, k])),
+  };
 }
 
 /** One row of the tree. Children render below it, indented behind a connector line. */
@@ -85,7 +90,7 @@ function TargetTree({ tree }: { tree: ReturnType<typeof useOpen> }) {
 
   return (
     <section className="block">
-      <ul className="tree top">
+      <ul className="tree tree-root">
         <Node root id="goal" tree={tree} icon={<span className="tn-ico red"><Target size={15} /></span>}
           label={<b>{st.ns_title || 'Mục tiêu chính'}</b>} meta={<span className="pctpill">{goalPct}%</span>}
           actions={<button className="icon-btn" title="Sửa mục tiêu chính" onClick={() => setGoal(true)}><MoreHorizontal size={16} /></button>}>
@@ -150,7 +155,7 @@ function RoutineTree({ tree }: { tree: ReturnType<typeof useOpen> }) {
   const asked = s.frames.map((f) => kept(f, s.flogs, now)).filter((k) => k != null);
   return (
     <section className="block">
-      <ul className="tree top">
+      <ul className="tree tree-root">
         <Node root id="routine" tree={tree} icon={<span className="tn-ico dark"><Repeat size={15} /></span>}
           label={<b>Routine</b>} meta={asked.length > 0 && <span className="pctpill dark">{asked.filter(Boolean).length}/{asked.length} hôm nay</span>}>
           {s.frames.map((f) => {
@@ -197,9 +202,52 @@ function SettingsSheet({ onClose }: { onClose(): void }) {
   );
 }
 
+/**
+ * Mini month for the space under the routine tree. It takes whatever height is left (flex: 1) with a floor, so it
+ * grows when the tree is short and shrinks as branches and routines are added; text scales with its own height.
+ */
+function MiniMonth({ cur, onPick }: { cur: string; onPick(d: string): void }) {
+  const s = useStore();
+  const a = useTaskActions();
+  const now = today();
+  const [shown, setShown] = useState(cur.slice(0, 7)); // yyyy-mm on screen
+  useEffect(() => setShown(cur.slice(0, 7)), [cur]);
+  const [y, m] = shown.split('-').map(Number);
+  const first = monday(`${shown}-01`);
+  const days = Array.from({ length: 42 }, (_, i) => addDays(first, i));
+  const week = weekDays(cur);
+  const byDay = new Map<string, Task[]>();
+  for (const t of s.tasks) byDay.set(t.due, [...(byDay.get(t.due) ?? []), t]);
+  const step = (n: number) => { const d = new Date(y, m - 1 + n, 1); setShown(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`); };
+  return (
+    <section className="mini">
+      <header>
+        <b>Tháng {m}, {y}</b>
+        <span className="grow" />
+        <button className="round sm" title="Tháng trước" onClick={() => step(-1)}><ChevronLeft size={15} /></button>
+        <button className="round sm" title="Tháng sau" onClick={() => step(1)}><ChevronRight size={15} /></button>
+      </header>
+      <div className="mini-grid">
+        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((w) => <small key={w}>{w}</small>)}
+        {days.map((d) => {
+          const xs = byDay.get(d) ?? [];
+          const cls = [+d.slice(5, 7) !== m && 'out', d === now && 'now', d === cur && 'sel', week.includes(d) && 'wk'].filter(Boolean).join(' ');
+          return (
+            <button key={d} className={cls} title={xs.length ? `${xs.length} việc` : undefined} onClick={() => onPick(d)}>
+              <span>{+d.slice(8)}</span>
+              <i>{xs.slice(0, 3).map((t) => <em key={t.id} style={{ background: a.color(t), opacity: t.done ? 0.35 : 1 }} />)}</i>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const tree = useOpen();
   const [settings, setSettings] = useState(false);
+  const [cur, setCur] = useState(today()); // day the big calendar is showing; the mini month drives it too
   return (
     <div className="home">
       <div className="dragbar" />
@@ -216,10 +264,11 @@ export default function Home() {
           <TargetTree tree={tree} />
           <h4 className="sect">Routine</h4>
           <RoutineTree tree={tree} />
-          <small className="panel-hint">Bấm đúp vào tên để đổi tên · biểu tượng lịch thêm việc gắn với nhánh.</small>
+          <h4 className="sect">Lịch tháng</h4>
+          <MiniMonth cur={cur} onPick={setCur} />
         </div>
       </aside>
-      <section className="board"><Calendar /></section>
+      <section className="board"><Calendar cur={cur} setCur={setCur} /></section>
       {settings && <SettingsSheet onClose={() => setSettings(false)} />}
     </div>
   );

@@ -138,3 +138,25 @@
 /* keep the tree inside its panel: long names truncate instead of pushing a horizontal scrollbar */
 .panel-scroll { overflow-x: hidden; }
 .block, .tree, .tn, .tn-row { min-width: 0; }
+
+/* ---------- mini month under the routine tree (auto-sizing) ----------
+   The tree blocks keep their natural height; the mini month takes whatever height is left (grow from a 236px floor).
+   Few branches/routines: it grows to fill the panel. Many: it shrinks to the floor and the panel scrolls.
+   Text and dots scale with the grid's own height via container query units. */
+.panel-scroll > * { flex: none; }
+.panel-scroll > .mini { flex: 1 0 236px; }
+.mini { display: flex; flex-direction: column; background: #f6f6f7; border-radius: 22px; padding: 10px 10px 8px; min-height: 236px; }
+.mini > header { display: flex; align-items: center; gap: 2px; padding: 2px 4px 6px 8px; border-bottom: 1.5px solid var(--black); margin: 0 4px 6px; }
+.mini > header b { font-size: 13.5px; font-weight: 700; }
+.round.sm { width: 28px; height: 28px; }
+.mini-grid { flex: 1; min-height: 0; container-type: size; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto repeat(6, minmax(0, 1fr)); gap: 2px; }
+.mini-grid > small { text-align: center; font-size: clamp(10px, 3.6cqh, 12.5px); font-weight: 600; color: var(--muted); padding: 2px 0 4px; }
+.mini-grid > button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(1px, .8cqh, 4px); border-radius: 12px; min-height: 0; font-size: clamp(11px, 4.6cqh, 17px); font-weight: 500; }
+.mini-grid > button:hover { background: #fff; }
+.mini-grid > button span { width: clamp(22px, 9.5cqh, 38px); height: clamp(22px, 9.5cqh, 38px); display: grid; place-items: center; border-radius: 50%; }
+.mini-grid > button.wk { background: #ebebee; }
+.mini-grid > button.out { color: #b4b4bc; }
+.mini-grid > button.sel span { box-shadow: inset 0 0 0 1.5px var(--black); }
+.mini-grid > button.now span { background: var(--black); color: #fff; }
+.mini-grid > button i { display: flex; gap: 2px; height: clamp(4px, 1.4cqh, 6px); }
+.mini-grid > button em { width: clamp(4px, 1.4cqh, 6px); height: clamp(4px, 1.4cqh, 6px); border-radius: 50%; }

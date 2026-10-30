@@ -45,12 +45,12 @@ function title(view: View, cur: string) {
   return a.getMonth() === b.getMonth() ? `Tháng ${b.getMonth() + 1}, ${b.getFullYear()}` : `Th${a.getMonth() + 1} – Th${b.getMonth() + 1}, ${b.getFullYear()}`;
 }
 
-export default function Calendar() {
+/** `cur` (any day inside the period on screen) is owned by the caller so the mini month in the side panel can drive it. */
+export default function Calendar({ cur, setCur }: { cur: string; setCur(d: string): void }) {
   const s = useStore();
   const a = useTaskActions();
   const now = today();
   const [view, setView] = useState<View>(() => { try { return (localStorage.getItem(VIEW_KEY) as View) || 'week'; } catch { return 'week'; } });
-  const [cur, setCur] = useState(now);
   const [edit, setEdit] = useState<Partial<Task> | null>(null);
   useEffect(() => { try { localStorage.setItem(VIEW_KEY, view); } catch { /* ignore */ } }, [view]);
 

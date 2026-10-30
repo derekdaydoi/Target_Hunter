@@ -332,8 +332,7 @@ export function SettingsPage() {
       <section className="card">
         <header className="sec-head"><h2>Hồ sơ</h2><Saved at={savedProfile} /></header>
         <SettingInput k="name" label="Tên hiển thị" onSaved={() => setSavedProfile(Date.now())} />
-        <SettingInput k="quote" label="Câu nhắc bản thân" max={200} onSaved={() => setSavedProfile(Date.now())} />
-        <small className="hint">Thay đổi được lưu khi bạn rời ô nhập. Câu nhắc hiện ở đầu trang Tổng quan.</small>
+        <small className="hint">Thay đổi được lưu khi bạn rời ô nhập.</small>
       </section>
 
       <section className="card">

@@ -81,7 +81,7 @@ function seed(withSamples) {
   const d = (n) => ymd(shift(mon, n));
   const settings = {
     name: 'Alex', ns_title: 'Thu nhập 50M net/tháng', ns_current: '20', ns_target: '50', ns_unit: 'M', ns_desc: 'Dữ liệu mẫu: thay bằng mục tiêu của bạn ở nút Chỉnh sửa.',
-    ns_target_year: String(now.getFullYear() + 4), quote: 'Mỗi ngày một bước nhỏ.', remind_time: '08:30',
+    ns_target_year: String(now.getFullYear() + 4), remind_time: '08:30',
   };
   for (const [key, value] of Object.entries(settings)) insert('settings', { key, value });
   if (!withSamples) return;

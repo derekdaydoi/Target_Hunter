@@ -6,10 +6,10 @@ import { useStore } from './store';
 
 export function Logo({ size = 30 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="#386ff1" strokeWidth="17">
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="#111111" strokeWidth="17">
       <path d="M46.1 18.24A32 32 0 1 0 81.82 53.34" />
-      <path d="M56.65 18.7A32 32 0 0 1 81.69 45.55" stroke="#ff922f" />
-      <circle cx="50" cy="50" r="11.5" fill="#386ff1" stroke="none" />
+      <path d="M56.65 18.7A32 32 0 0 1 81.69 45.55" stroke="#e11d2a" />
+      <circle cx="50" cy="50" r="11.5" fill="#111111" stroke="none" />
     </svg>
   );
 }

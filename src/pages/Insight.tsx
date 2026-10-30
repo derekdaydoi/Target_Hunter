@@ -11,7 +11,7 @@ import { LineChart } from './Chart';
 import { FramesWeek } from './Frames';
 
 // ---------- goals ----------
-function TrackModal({ track, onClose }: { track: Partial<Track>; onClose(): void }) {
+export function TrackModal({ track, onClose }: { track: Partial<Track>; onClose(): void }) {
   const s = useStore();
   const { f, bind } = useForm({ name: track.name ?? '', color: track.color ?? '#2e90fa' });
   const save = async () => {

@@ -1,6 +1,8 @@
 :root {
-  --bg: #f4f6f9; --card: #fff; --line: #e3e8ef; --hair: #eef1f5; --text: #17243b; --muted: #6b7a90; --blue: #386ff1; --soft: #edf3ff; --orange: #ff922f;
-  --shadow: 0 1px 2px rgba(23, 36, 59, .05), 0 4px 14px rgba(23, 36, 59, .05);
+  /* white and grey theme: grey page, white blocks, black lines; --blue is the old accent name, now black so older rules follow it */
+  --bg: #ececee; --card: #fff; --line: #e4e4e7; --hair: #f0f0f2; --text: #111111; --muted: #71717a; --blue: #111111; --soft: #f4f4f5; --orange: #e11d2a;
+  --red: #e11d2a; --black: #111111;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.06);
   --s1: 8px; --s2: 12px; --s3: 16px; --s4: 24px; --s5: 32px;
   font-family: 'Be Vietnam Pro', 'Segoe UI', system-ui, sans-serif; font-size: 14px; color: var(--text); font-variant-numeric: tabular-nums;
 }
@@ -418,3 +420,4 @@ input:not([type='checkbox']):not([type='color']), select { min-height: 42px; }
 .fr-trow > b { text-align: right; font-size: 14px; }
 .fr-tname { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; min-width: 0; }
 .form .fr-mode input { width: 16px; height: 16px; padding: 0; flex: none; box-shadow: none; }
+

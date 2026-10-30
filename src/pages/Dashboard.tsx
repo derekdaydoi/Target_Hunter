@@ -7,7 +7,7 @@ import { FramesCard } from './Frames';
 
 const ids = (v?: string) => (v ?? '').split(',').filter(Boolean).map(Number);
 
-function NorthStarModal({ onClose }: { onClose(): void }) {
+export function NorthStarModal({ onClose }: { onClose(): void }) {
   const s = useStore();
   const st = s.settings;
   const { f, bind } = useForm({

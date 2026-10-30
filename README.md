@@ -39,6 +39,7 @@
 
 ## Tính năng
 
+- **Một màn hình, hai phần**: bên trái là cây mục tiêu và routine (Mục tiêu chính → Nhánh → Mốc; Routine → từng routine → từng lần trong ngày), tự thêm, đổi tên (bấm đúp), tick và xoá ngay trên cây; bên phải là lịch tháng/tuần/năm. Theme đen đỏ.
 - **Mục tiêu chính**: đo bằng một con số (kèm tốc độ tăng trưởng cần đạt mỗi năm), hoặc gắn với các nhánh mục tiêu, ví dụ một giai đoạn "Phase 1: Data skills + Trading basic": xong các nhánh là xong mục tiêu.
 - **Nhánh mục tiêu và mốc**: chia mục tiêu lớn thành các nhánh; mỗi nhánh gồm các mốc đầu ra cụ thể. Tiến độ bằng số mốc đã hoàn thành.
 - **Khung sống**: chuẩn sống bạn muốn giữ (ăn uống, nước, supplement, vận động, giấc ngủ…), mỗi khung chọn cách theo dõi: chỉ nhắc, tick mỗi ngày, tick theo giờ, đếm theo ngày, hoặc theo lịch (chạy, cầu lông: đo tỉ lệ tuân thủ lịch, không đặt mục tiêu số buổi). App chỉ nhắc khi hôm nay chưa giữ khung.
@@ -83,7 +84,7 @@ src/           giao diện React + TypeScript
   store.tsx      trạng thái dùng chung, đọc/ghi dữ liệu
   ui.tsx         thành phần dùng lại (thẻ, cửa sổ, logo)
   styles.css     toàn bộ style
-  pages/         Dashboard, Insight (Mục tiêu, Thống kê, Review, Cài đặt), Work (Nhiệm vụ, Lịch), Frames (Khung sống), Chart (biểu đồ)
+  pages/         Home (màn hình chính: cây + lịch), Dashboard, Insight (Mục tiêu, Thống kê, Review, Cài đặt), Work (Nhiệm vụ, Lịch), Frames (Khung sống), Chart (biểu đồ)
 scripts/       sinh logo và icon
 logo/          bộ logo
 docs/          ảnh demo

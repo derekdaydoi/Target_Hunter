@@ -244,10 +244,10 @@ function startReminders() {
 // ---------- window ----------
 function createWindow() {
   win = new BrowserWindow({
-    width: 1440, height: 900, minWidth: 1100, minHeight: 600, show: false, backgroundColor: '#f4f6f9',
+    width: 1440, height: 900, minWidth: 1100, minHeight: 600, show: false, backgroundColor: '#ececee',
     icon: path.join(__dirname, 'icon.png'),
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#f4f6f9', symbolColor: '#17243b', height: 40 },
+    titleBarOverlay: { color: '#ececee', symbolColor: '#111111', height: 40 },
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, sandbox: true },
   });
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

@@ -12,7 +12,7 @@ const GROUPS: Record<string, [string, typeof Droplet]> = {
   'Ăn uống': ['#079455', Utensils], 'Nước': ['#386ff1', Droplet], 'Supplement': ['#7a5af8', Pill],
   'Vận động': ['#e04f16', Footprints], 'Giấc ngủ': ['#475467', Moon], 'Khác': ['#0e9384', Sparkles],
 };
-const groupOf = (f: Frame) => GROUPS[f.grp] ?? GROUPS['Khác'];
+export const groupOf = (f: Frame) => GROUPS[f.grp] ?? GROUPS['Khác'];
 
 // mode → label, explanation, chip colours
 const MODES: Record<FrameMode, [string, string, string, string]> = {
@@ -24,7 +24,7 @@ const MODES: Record<FrameMode, [string, string, string, string]> = {
 };
 
 const dayNames = (days: string) => [...days].sort().map((d) => WDS[+d - 1]).join(' · ');
-const stepsOf = (f: Frame) => {
+export const stepsOf = (f: Frame) => {
   const xs = (f.steps ?? '').split(/[;\s]+/).map((x) => +x.replace(',', '.')).filter((x) => x > 0);
   return xs.length ? xs : [1];
 };
@@ -169,7 +169,7 @@ function FrameCard({ f, onEdit }: { f: Frame; onEdit(): void }) {
   );
 }
 
-function FrameModal({ frame, onClose }: { frame: Partial<Frame>; onClose(): void }) {
+export function FrameModal({ frame, onClose }: { frame: Partial<Frame>; onClose(): void }) {
   const s = useStore();
   const { f, setF, bind } = useForm({
     name: frame.name ?? '', grp: frame.grp ?? 'Ăn uống', rules: frame.rules ?? '', mode: frame.mode ?? 'daily',
